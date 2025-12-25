@@ -1,0 +1,14 @@
+define { 
+    langs = en-US, ru-RU
+    encoding = "utf-8"
+} 
+
+define unexpected(key) {
+    "undefined key" + key
+}
+
+package page {
+    package main.navbar {
+
+    }
+}
