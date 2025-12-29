@@ -38,10 +38,15 @@ export class LingFunctionExpression {
     }
 
     public parse(parser: LingParser): this {
+        const name = parser.currentToken.keyword;
         if(parser.match(ELingTokenType.COLON, 1)) {
             parser.next(2);
             StatementHelper.Lang.satisfiesLanguageFormat(parser);
-            this.lang = parser.slice(0, 3, (i, token) => token.keyword).join("-");
+            const lang = parser.slice(0, 3, (i, token) => token.keyword).join("-");
+            if(parser.settings.langs.includes(lang) == false) {
+                parser.throwError(`Cannot register function "${name}" for not defined lang "${lang}"`)
+            }
+            this.lang = lang;
             parser.next(4);
         } else {
             parser.next(2);

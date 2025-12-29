@@ -5,25 +5,26 @@ define {
         "undefined key" + key
     }
     unexpected(key) {
-        "ру ру"
+        "неизвестный ключ" + key
     }
-} 
-
+}
 
 package page {
-    sayhi:en-US() {
-        "hi"
+    sayhi:ru-RU() {
+        "хай"
     }
     sayhi() {
-        "aboba"
+        "hi"
     }
 
     package default.navbar {
-        /*saygoodbye() {
+        saygoodbye:ru-RU() {
             "goodbye"
         }
-        narrowing_example() {
-
-        }*/
+        /*
+        narrowing_example:en-UK() { //throws error because en-UK is not defined
+            "lol"
+        }
+        */
     }
 }

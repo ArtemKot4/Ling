@@ -36,7 +36,7 @@ export class LingParser {
         };
     }
 
-    public throwError(text: string) {
+    public throwError(text: string): void {
         throw `LingParser: ${text} on line ${this.currentToken.line} and position ${this.currentToken.column}`;
     }
 
@@ -62,13 +62,9 @@ export class LingParser {
         return this.lexicalAnalyzer.tokens[this.tokenIndex + index] || null;
     }
 
-    public match(type: ELingTokenType, index: number = 0) {
+    public match(type: ELingTokenType, index: number = 0): boolean {
         const token = this.peek(index);
         return token != null && token.type == type;
-    }
-
-    public isConstantBeginning(): boolean {
-        return this.match(ELingTokenType.IDENTIFIER) && this.match(ELingTokenType.EQUAL, 1);
     }
 
     public expect(type: ELingTokenType, error?: string, position: number = 1): LingToken {

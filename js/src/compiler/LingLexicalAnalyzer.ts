@@ -13,9 +13,8 @@ export default class LingLexicalAnalyzer {
 
     public tokenize(): void {
         this.currentChar = this.text[0];
-
         let token;
-        do { token = this.next(); } while(token  != null);
+        do { token = this.next(); } while(token != null);
     }
 
     public addToken(type: ELingTokenType, keyword?: string): LingToken {
@@ -24,7 +23,7 @@ export default class LingLexicalAnalyzer {
         return token;
     }
 
-    public throwError(text: string) {
+    public throwError(text: string): void {
         throw `LingLexicalAnalyzer: ${text} on line ${this.line} and position ${this.position}`;
     }
 
