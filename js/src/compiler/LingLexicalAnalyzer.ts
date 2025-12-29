@@ -107,6 +107,7 @@ export default class LingLexicalAnalyzer {
                 this.skipLongComment();
                 return this.next();
             }
+            //return this.next();
         }
         
         if(this.isDigit(this.currentChar) || ((this.currentChar == "." || this.currentChar == "_") && this.isDigit(this.peek()))) {

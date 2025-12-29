@@ -1,14 +1,29 @@
 define { 
     langs = en-US, ru-RU
-    encoding = "utf-8"
+    encoding = "utf-32"
+    unexpected:en-US(key) {
+        "undefined key" + key
+    }
+    unexpected(key) {
+        "ру ру"
+    }
 } 
 
-define unexpected(key) {
-    "undefined key" + key
-}
 
 package page {
-    package main.navbar {
+    sayhi:en-US() {
+        "hi"
+    }
+    sayhi() {
+        "aboba"
+    }
 
+    package default.navbar {
+        /*saygoodbye() {
+            "goodbye"
+        }
+        narrowing_example() {
+
+        }*/
     }
 }

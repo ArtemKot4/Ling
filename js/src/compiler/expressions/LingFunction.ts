@@ -1,5 +1,6 @@
 import { ELingTokenType } from "../ELingTokenType";
 import { LingParser, IBinaryOperationNode } from "../LingParser";
+import { StatementHelper } from "../StatementHelper";
 import { ArithmeticExpression } from "./ArithmeticExpression";
 import LingExpression from "./LingExpression";
 
@@ -8,13 +9,13 @@ export interface IArgumentDescription {
 }
 
 export interface ILingFunctionNode {
-    args: Record<string, IArgumentDescription>
+    lang?: string;
+    args: Record<string, IArgumentDescription>;
     returnType: IBinaryOperationNode[];
 }
 
-//@ExpressionStatement
-export class LingFunctionExpression extends LingExpression {
-    public override type: string = "function";
+export class LingFunctionExpression {
+    public lang!: string;
     public args: Record<string, IArgumentDescription> = {};
     public returnType = []; 
 
@@ -36,8 +37,15 @@ export class LingFunctionExpression extends LingExpression {
         }
     }
 
-    public override parse(parser: LingParser): this {
-        parser.next(2);
+    public parse(parser: LingParser): this {
+        if(parser.match(ELingTokenType.COLON, 1)) {
+            parser.next(2);
+            StatementHelper.Lang.satisfiesLanguageFormat(parser);
+            this.lang = parser.slice(0, 3, (i, token) => token.keyword).join("-");
+            parser.next(4);
+        } else {
+            parser.next(2);
+        }
         this.parseArguments(parser);
 
         if(!parser.match(ELingTokenType.CLOSE_RBRACKET)) {
@@ -47,8 +55,13 @@ export class LingFunctionExpression extends LingExpression {
         if(!parser.match(ELingTokenType.OPEN_CBRACKET)) {
             parser.throwError(`Expected "{"`);
         }
-        while(parser.currentToken && !parser.match(ELingTokenType.CLOSE_CBRACKET)) {
-            this.returnType.push(parser.next()); //waiting arithmetic expression
+        while(parser.currentToken != null) {
+            const token = parser.next();
+            if(parser.match(ELingTokenType.CLOSE_CBRACKET)) {
+                break;
+            }
+            //console.log(ELingTokenType.getPrintTypeName(token.type));
+            this.returnType.push(token); //waiting arithmetic expression
         }
         //this.returnType = new ArithmeticExpression().parse(parser, (p) => p.match(ELingTokenType.CLOSE_CBRACKET), this.args);
         if(!parser.match(ELingTokenType.CLOSE_CBRACKET)) {
@@ -56,9 +69,5 @@ export class LingFunctionExpression extends LingExpression {
         }
         parser.next();
         return this;
-    }
-
-    public static find(parser: LingParser): boolean {
-        return parser.match(ELingTokenType.IDENTIFIER) && parser.match(ELingTokenType.OPEN_RBRACKET, 1);
     }
 }

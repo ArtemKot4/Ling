@@ -32,7 +32,7 @@ export class LingParser {
         this.settings = {
             langs: langs,
             encoding: "utf-8",
-            unexpected: null
+            unexpected: {}
         };
     }
 
@@ -77,6 +77,22 @@ export class LingParser {
             this.throwError(error || "Expected another type");
         }
         return token;
+    }
+
+    public slice<T extends (index: number, token: LingToken) => unknown>(relativeFrom: number, relativeTo: number, addCallback?: T): ReturnType<T>[] {
+        const list = [];
+        if(this.peek(relativeFrom) == null || this.peek(relativeTo) == null) {
+            this.throwError("Token cannot be null by slice operation");
+        }
+        for(let i = relativeFrom; i < relativeTo; i++) {
+            const token = this.peek(i);
+            const value = addCallback ? addCallback(i, token) : token;
+            if(value == null) {
+                continue;
+            }
+            list.push(value);
+        }
+        return list;
     }
 
     public parse(): void {

@@ -76,6 +76,10 @@ export enum ELingTokenType {
      */
     SEMICOLON,
     /**
+     * `:`
+     */
+    COLON,
+    /**
      * `%`
      */
     PERCENT,
@@ -87,10 +91,14 @@ export enum ELingTokenType {
      * `/`
      */
     SLASH,
-    /**
-     * `_`
-     */
+    ///**
+    // * `_`
+    // */
     //UNDERSCORE
+    /**
+     * `match`
+     */
+    MATCH,
 }
 
 export namespace ELingTokenType {
@@ -110,6 +118,7 @@ export namespace ELingTokenType {
         "-": ELingTokenType.MINUS,
         ";": ELingTokenType.SEMICOLON,
         "%": ELingTokenType.PERCENT,
+        ":": ELingTokenType.COLON,
         "|": ELingTokenType.PIPE,
         "/": ELingTokenType.SLASH,
         //"_": ELingTokenType.UNDERSCORE
@@ -117,14 +126,15 @@ export namespace ELingTokenType {
 
     export const keywords = {
         "define": ELingTokenType.DEFINE,
-        "package": ELingTokenType.PACKAGE
+        "package": ELingTokenType.PACKAGE,
+        "match": ELingTokenType.MATCH
     };
 
-    export function isOperator(text: string) {
+    export function isOperator(text: string): boolean {
         return text in operators;
     }
 
-    export function isKeyword(text: string) {
+    export function isKeyword(text: string): boolean {
         return text in keywords;
     }
     

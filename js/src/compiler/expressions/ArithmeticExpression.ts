@@ -1,6 +1,6 @@
 import { ELingTokenType } from "../ELingTokenType";
 import { ExpressionValue, IBinaryOperationNode, LingParser } from "../LingParser";
-import { IArgumentDescription } from "./LingFunctionExpression";
+import { IArgumentDescription } from "./LingFunction";
 import LingExpression from "./LingExpression";
 import LingLexicalAnalyzer from "../LingLexicalAnalyzer";
 
