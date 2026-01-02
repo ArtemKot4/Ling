@@ -37,7 +37,11 @@ export class LingParser {
     }
 
     public throwError(text: string): void {
-        throw `LingParser: ${text} on line ${this.currentToken.line} and position ${this.currentToken.column}`;
+        throw `Ling SyntaxError: ${text} on line ${this.currentToken.line} and position ${this.currentToken.column}${this.lexicalAnalyzer.fileName ? " at file: " + this.lexicalAnalyzer.fileName.split(".").slice(-2).join(".") : ""}`;
+    }
+
+    public warn(text: string): void {
+        console.log("Ling syntax warn: " + text);
     }
 
     public createPackages(path: string[], packageName: string): void {

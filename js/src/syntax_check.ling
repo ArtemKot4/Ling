@@ -1,11 +1,11 @@
 define { 
     langs = en-US, ru-RU
-    encoding = "utf-32"
-    unexpected:en-US(key) {
-        "undefined key" + key
+    encoding = "utf-8"
+    unexpected:en-UK(key) {
+        "undefined key ${key}"
     }
     unexpected(key) {
-        "неизвестный ключ" + key
+        "неизвестный ключ ${key}"
     }
 }
 
@@ -22,8 +22,8 @@ package page {
             "goodbye"
         }
         /*
-        narrowing_example:en-UK() { //throws error because en-UK is not defined
-            "lol"
+        narrowing_example:en-UK() {
+            "throws error because en-UK is not defined"
         }
         */
     }

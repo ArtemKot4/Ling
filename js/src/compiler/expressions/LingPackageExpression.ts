@@ -8,7 +8,6 @@ import { LingFunctionExpression } from "./LingFunction";
 
 @ExpressionStatement
 export class LingPackageExpression extends LingExpression {
-    public override type?: string = "package";
     public path: string[] = [];
     public currentPackage: ReturnType<typeof this.getPackage>;
     public name: string;

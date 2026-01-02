@@ -9,7 +9,7 @@ export default class LingLexicalAnalyzer {
     public langs: string[] = [];
     public tokens: LingToken[] = [];
     
-    public constructor(public text: string) {}
+    public constructor(public text: string, public fileName?: string) {}
 
     public tokenize(): void {
         this.currentChar = this.text[0];
@@ -17,14 +17,18 @@ export default class LingLexicalAnalyzer {
         do { token = this.next(); } while(token != null);
     }
 
+    public newToken(type: ELingTokenType, keyword?: string): LingToken {
+        return new LingToken(this.line, this.column, type, keyword);
+    }
+
     public addToken(type: ELingTokenType, keyword?: string): LingToken {
-        const token = new LingToken(this.line, this.column, type, keyword);
+        const token = this.newToken(type, keyword);
         this.tokens.push(token);
         return token;
     }
 
     public throwError(text: string): void {
-        throw `LingLexicalAnalyzer: ${text} on line ${this.line} and position ${this.position}`;
+        throw `Ling ReferenceError: ${text} on line ${this.line} and position ${this.position}${this.fileName ? " at file: " + this.fileName.split(".").slice(-2).join(".") : ""}`;
     }
 
     public isDigit(char: string): boolean {
@@ -32,13 +36,36 @@ export default class LingLexicalAnalyzer {
     }
 
     public tokenizeString(): LingToken {
-        this.advance()
+        this.advance();
         let string = "";
         
         while(true) {
-            if(!this.currentChar) {
+            if(this.currentChar == null) {
                 this.throwError(`Unclosed string`);
                 break;
+            }
+            if(this.currentChar == "$" && this.peek() == "{") {
+                this.addToken(ELingTokenType.STRING, string);
+                this.addToken(ELingTokenType.PLUS);
+                this.addToken(ELingTokenType.OPEN_RBRACKET);
+                this.advance(2);
+
+                while(true) {
+                    const token = this.next();
+
+                    console.log("type: " + ELingTokenType.getPrintTypeName(token.type));
+                    if(token.type == ELingTokenType.CLOSE_CBRACKET) {
+                        this.tokens.pop();
+                        this.addToken(ELingTokenType.CLOSE_RBRACKET);
+                        this.addToken(ELingTokenType.PLUS);
+                        string = "";
+
+                        break;
+                    }
+                    if(token == null) {
+                        this.throwError("Unexpected end of inside string expression");
+                    } 
+                }
             }
             if(this.currentChar == `"`) {
                 this.advance();
@@ -87,8 +114,11 @@ export default class LingLexicalAnalyzer {
         while(this.currentChar != null && !(this.currentChar == "*" && this.peek() == "/")) {
             this.advance();
         }
-        this.advance();
-        this.advance();
+        this.advance(2);
+    }
+
+    public isValidNumber(): boolean {
+        return this.isDigit(this.currentChar) || ((this.currentChar == "." || this.currentChar == "_") && this.isDigit(this.peek()));
     }
 
     public next(): LingToken {
@@ -106,10 +136,13 @@ export default class LingLexicalAnalyzer {
                 this.skipLongComment();
                 return this.next();
             }
-            //return this.next();
         }
+        // if(this.currentChar == "\\" && this.peek() == "\\") {
+        //     this.advance();
+        //     this.advance();
+        // }
         
-        if(this.isDigit(this.currentChar) || ((this.currentChar == "." || this.currentChar == "_") && this.isDigit(this.peek()))) {
+        if(this.isValidNumber()) {
             return this.tokenizeNumber();
         }
         if(this.currentChar == `"`) {
@@ -188,15 +221,29 @@ export default class LingLexicalAnalyzer {
         return pos < this.text.length ? this.text[pos] : null;
     }
 
-    public advance(): void {
+    public advance(index = 1): void {
         if(this.currentChar == '\n') {
             this.line++;
             this.column = 0;
         } else {
-            this.column++;
+            this.column += index;
         }
 
-        this.position++;
+        this.position += index;
         this.currentChar = this.text[this.position] || null;
     }
 }
+
+const text = `
+package aboba {
+    hello(a=10) {
+        a
+    }
+    b = 20
+    ${'c = "hello ${10 + 5} aboba ${"lol"}"'}
+}
+`
+
+// const la = new LingLexicalAnalyzer(text, "aboba.ling");
+// la.tokenize();
+// ELingTokenType.printTokens(la);

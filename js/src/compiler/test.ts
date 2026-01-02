@@ -8,7 +8,7 @@ import "./expressions/LingFunction";
 import { ELingTokenType } from "./ELingTokenType";
 
 const text = require("fs").readFileSync("js/src/syntax_check.ling").toString()
-const l = new LingLexicalAnalyzer(text);
+const l = new LingLexicalAnalyzer(text, "syntax_check.ling");
 l.tokenize();
 //ELingTokenType.printTokens(l, 0, 8);
 const p = new LingParser(l);

@@ -1,33 +1,20 @@
 import { ELingTokenType } from "../ELingTokenType";
-import { ExpressionValue, IBinaryOperationNode, LingParser } from "../LingParser";
-import { IArgumentDescription } from "./LingFunction";
-import LingExpression from "./LingExpression";
 import LingLexicalAnalyzer from "../LingLexicalAnalyzer";
+import { LingParser } from "../LingParser";
+import LingToken from "../LingToken";
 
-export class ArithmeticExpression extends LingExpression {
-    public stopPredicate!: (parser: LingParser) => boolean;
-
-    public override parse(parser: LingParser,  stopPredicate?: (parser: LingParser) => boolean, args: Record<string, IArgumentDescription> = {}): ExpressionValue {
-        this.stopPredicate = stopPredicate;
-        return this.parseExpression(parser, args);
-    }
-    
-    private parseExpression(parser: LingParser, args: Record<string, IArgumentDescription>): ExpressionValue {
-        if(this.stopPredicate(parser)) {
-            parser.throwError("Unexpected empty body of arithmetic expression");
-        }
-        return this.parseAddSub(parser, args);
-    }
-
-    public parseAddSub(parser: LingParser, args: Record<string, IArgumentDescription>): ExpressionValue {
+export class ArithmeticExpression {
+    public parse(parser: LingParser) {
         
-        return null
     }
 }
 
-let a = `aboba  + 2 * 5 + 2 lol`;
-const la = new LingLexicalAnalyzer(a);
-la.tokenize();
-// const lp = new LingParser(la);
-// console.log("?")
-ELingTokenType.printTokens(la);
+const lA: LingLexicalAnalyzer = new LingLexicalAnalyzer(`
+"hello" + 1
+`);
+lA.tokenize();
+ELingTokenType.printTokens(lA);
+
+const parser = new LingParser(lA)
+const exp = new ArithmeticExpression().parse(parser);
+console.log(exp);

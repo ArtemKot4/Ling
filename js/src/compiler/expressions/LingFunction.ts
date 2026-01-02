@@ -2,7 +2,6 @@ import { ELingTokenType } from "../ELingTokenType";
 import { LingParser, IBinaryOperationNode } from "../LingParser";
 import { StatementHelper } from "../StatementHelper";
 import { ArithmeticExpression } from "./ArithmeticExpression";
-import LingExpression from "./LingExpression";
 
 export interface IArgumentDescription {
     type: ELingTokenType, value: string | IBinaryOperationNode
@@ -60,6 +59,7 @@ export class LingFunctionExpression {
         if(!parser.match(ELingTokenType.OPEN_CBRACKET)) {
             parser.throwError(`Expected "{"`);
         }
+        
         while(parser.currentToken != null) {
             const token = parser.next();
             if(parser.match(ELingTokenType.CLOSE_CBRACKET)) {
@@ -68,6 +68,9 @@ export class LingFunctionExpression {
             //console.log(ELingTokenType.getPrintTypeName(token.type));
             this.returnType.push(token); //waiting arithmetic expression
         }
+
+        //this.returnType.push(new ArithmeticExpression().parse(parser));
+
         //this.returnType = new ArithmeticExpression().parse(parser, (p) => p.match(ELingTokenType.CLOSE_CBRACKET), this.args);
         if(!parser.match(ELingTokenType.CLOSE_CBRACKET)) {
             parser.throwError(`Expected "}"`);
