@@ -1,7 +1,7 @@
 define { 
     langs = en-US, ru-RU
     encoding = "utf-8"
-    unexpected:en-UK(key) {
+    unexpected:en-US(key) {
         "undefined key ${key}"
     }
     unexpected(key) {

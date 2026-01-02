@@ -79,14 +79,14 @@ export class LingParser {
         return token;
     }
 
-    public slice<T extends (index: number, token: LingToken) => unknown>(relativeFrom: number, relativeTo: number, addCallback?: T): ReturnType<T>[] {
+    public slice<T extends (index: number, token: LingToken) => unknown>(relativeFrom: number, relativeTo: number, addFormat?: T): ReturnType<T>[] {
         const list = [];
         if(this.peek(relativeFrom) == null || this.peek(relativeTo) == null) {
             this.throwError("Token cannot be null by slice operation");
         }
         for(let i = relativeFrom; i < relativeTo; i++) {
             const token = this.peek(i);
-            const value = addCallback ? addCallback(i, token) : token;
+            const value = addFormat ? addFormat(i, token) : token;
             if(value == null) {
                 continue;
             }

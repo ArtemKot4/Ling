@@ -9,6 +9,9 @@ export default class LingLexicalAnalyzer {
     public langs: string[] = [];
     public tokens: LingToken[] = [];
     
+    //string keys
+    public hasOpenedStringExpression: boolean = false;
+    
     public constructor(public text: string, public fileName?: string) {}
 
     public tokenize(): void {
@@ -44,24 +47,28 @@ export default class LingLexicalAnalyzer {
                 this.throwError(`Unclosed string`);
                 break;
             }
-            if(this.currentChar == "$" && this.peek() == "{") {
+            if(this.hasOpenedStringExpression == false && this.peek(-1) != "\\" && this.currentChar == "$" && this.peek() == "{") {
+                this.hasOpenedStringExpression = true;
                 this.addToken(ELingTokenType.STRING, string);
                 this.addToken(ELingTokenType.PLUS);
                 this.addToken(ELingTokenType.OPEN_RBRACKET);
-                this.advance(2);
+                this.advance(2); // ${
 
                 while(true) {
-                    const token = this.next();
-
-                    console.log("type: " + ELingTokenType.getPrintTypeName(token.type));
-                    if(token.type == ELingTokenType.CLOSE_CBRACKET) {
-                        this.tokens.pop();
-                        this.addToken(ELingTokenType.CLOSE_RBRACKET);
-                        this.addToken(ELingTokenType.PLUS);
+                    if(this.currentChar == "}" as any) {
+                        this.hasOpenedStringExpression = false;
+                        const closeToken = this.addToken(ELingTokenType.CLOSE_RBRACKET);
+                        this.advance(); // }
                         string = "";
-
-                        break;
+                        if(this.currentChar != `"` as any) {
+                            this.addToken(ELingTokenType.PLUS);
+                            break;
+                        }
+                        this.advance(); // "
+                        return closeToken;
                     }
+                    const token = this.next();
+                    
                     if(token == null) {
                         this.throwError("Unexpected end of inside string expression");
                     } 
@@ -114,7 +121,7 @@ export default class LingLexicalAnalyzer {
         while(this.currentChar != null && !(this.currentChar == "*" && this.peek() == "/")) {
             this.advance();
         }
-        this.advance(2);
+        this.advance(2); // /*
     }
 
     public isValidNumber(): boolean {
@@ -138,8 +145,7 @@ export default class LingLexicalAnalyzer {
             }
         }
         // if(this.currentChar == "\\" && this.peek() == "\\") {
-        //     this.advance();
-        //     this.advance();
+        //     this.advance(2);
         // }
         
         if(this.isValidNumber()) {
@@ -216,8 +222,8 @@ export default class LingLexicalAnalyzer {
         }
     }
 
-    public peek(): string {
-        const pos = this.position + 1;
+    public peek(index = 1): string {
+        const pos = this.position + index;
         return pos < this.text.length ? this.text[pos] : null;
     }
 
@@ -240,10 +246,15 @@ package aboba {
         a
     }
     b = 20
-    ${'c = "hello ${10 + 5} aboba ${"lol"}"'}
+    ${'c = "hello ${10 + 5}! ${"lol${hi hi}" + 10}"'}
 }
+
+package heh {
+
+}
+
 `
 
-// const la = new LingLexicalAnalyzer(text, "aboba.ling");
-// la.tokenize();
-// ELingTokenType.printTokens(la);
+const la = new LingLexicalAnalyzer(text, "aboba.ling");
+la.tokenize();
+ELingTokenType.printTokens(la, 6);

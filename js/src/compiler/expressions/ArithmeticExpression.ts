@@ -5,7 +5,7 @@ import LingToken from "../LingToken";
 
 export class ArithmeticExpression {
     public parse(parser: LingParser) {
-        
+        //final boss
     }
 }
 
