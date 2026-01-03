@@ -1,7 +1,7 @@
 define langs = en-US, ru-RU
 
 define unexpected(key) {
-    match version: "1.0.0"
+    match key == "version": "1.0.0"
     "undefined ${key}"
 }
 
