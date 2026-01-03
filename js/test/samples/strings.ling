@@ -1,0 +1,26 @@
+// Работа со строками
+define langs = en-US, ru-RU
+
+package strings {
+    greeting = "Hello", "Привет"
+    
+    welcome(user) {
+        "${greeting}, ${user}!"
+    }
+    
+    // Многострочная строка
+    description = "
+        This is a multi-line
+        string with ${math.pi}
+        value included.
+    ", "
+        Это многострочная
+        строка со значением
+        ${math.pi} внутри.
+    "
+    
+    // Операции со строками
+    repeat(word, times = 2) {
+        word * times
+    }
+}

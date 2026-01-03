@@ -1,0 +1,24 @@
+// Пример глубокой вложенности пакетов
+package company {
+    package departments {
+        package engineering {
+            name = "Engineering", "Инженерия"
+            
+            package teams {
+                frontend = "Frontend", "Фронтенд"
+                backend = "Backend", "Бэкенд"
+                devops = "DevOps", "Девопс"
+            }
+        }
+        
+        package sales {
+            name = "Sales", "Продажи"
+            
+            regions {
+                europe = "Europe", "Европа"
+                asia = "Asia", "Азия"
+                america = "America", "Америка"
+            }
+        }
+    }
+}

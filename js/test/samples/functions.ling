@@ -1,0 +1,29 @@
+// Примеры функций с условиями
+define langs = en-US, ru-RU
+
+package logic {
+    // Функция с match
+    pluralize(count, word) {
+        match count == 1: word
+        match word == "mouse": "mice"
+        word + "s"
+    }
+    
+    // Функция с аргументами по умолчанию
+    greet(name, time = "day") {
+        "Good ${time}, ${name}!"
+    }
+    
+    // Переопределение для русского
+    greet:ru-RU(name, time = "day") {
+        match time == "morning": "Доброе утро, ${name}!"
+        match time == "evening": "Добрый вечер, ${name}!"
+        "Добрый день, ${name}!"
+    }
+    
+    // Работа с числами
+    format_number(num) {
+        match num > 1000: "${math.first_digit(num)}K"
+        num
+    }
+}

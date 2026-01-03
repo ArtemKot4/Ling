@@ -1,0 +1,18 @@
+// Конфигурационные настройки
+define {
+    langs = en-US, ru-RU, zh-CN, ja-JP
+    encoding = "utf-8"
+    version = "2.1.0"
+    
+    // Функция для несуществующих ключей
+    unexpected(key) {
+        "Key '${key}' not found in translations!"
+    }
+}
+
+// Дополнительные настройки
+/*
+define debug = true
+define max_items = 100
+define timeout = 30_000  // 30 секунд
+*/

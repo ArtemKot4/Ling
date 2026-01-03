@@ -1,0 +1,11 @@
+define langs = en-US, ru-RU
+
+define unexpected(key) {
+    match version: "1.0.0"
+    "undefined ${key}"
+}
+
+package howdy {
+    welcome = "Welcome to Ling!", "Добро пожаловать в Ling!"
+    start = "Please, make a star to support!", "Пожалуйста, поддержите нас звездой!"
+}

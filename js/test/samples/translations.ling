@@ -1,0 +1,22 @@
+// Основные переводы приложения
+define langs = en-US, ru-RU, fr-FR
+
+package translations {
+    // Простые переводы
+    common {
+        yes = "Yes", "Да", "Oui"
+        no = "No", "Нет", "Non"
+        ok = "OK", "Хорошо", "D'accord"
+    }
+    
+    // Вложенные пакеты
+    errors {
+        not_found = "Not found", "Не найдено", "Non trouvé"
+        unauthorized = "Unauthorized", "Не авторизован", "Non autorisé"
+        
+        // Функция для кастомных ошибок
+        custom(message) {
+            "Error: ${message}"
+        }
+    }
+}

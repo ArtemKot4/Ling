@@ -1,0 +1,23 @@
+// Примеры с регулярными выражениями
+package validation {
+    // Проверка email
+    is_email(text) {
+        text in /^[^\s@]+@[^\s@]+\.[^\s@]+$/i
+    }
+    
+    // Проверка числа
+    is_number(text) {
+        text in /^\d+$/
+    }
+    
+    // Извлечение чисел из строки. Нет же
+    extract_numbers(text) {
+        // Регулярное выражение с флагами
+        text in /\d+/g
+    }
+    
+    // С экранированием
+    has_dollar(text) {
+        text in /\${/
+    }
+}

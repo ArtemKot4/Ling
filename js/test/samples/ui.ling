@@ -1,0 +1,25 @@
+// Элементы пользовательского интерфейса
+define langs = en-US, ru-RU
+
+package ui {
+    // Навигация
+    navbar {
+        home = "Home", "Главная"
+        about = "About", "О нас"
+        contact = "Contact", "Контакты"
+    }
+    
+    // Кнопки
+    buttons {
+        submit = "Submit", "Отправить"
+        cancel = "Cancel", "Отмена"
+        save = "Save", "Сохранить"
+    }
+    
+    // Сообщения
+    messages {
+        loading = "Loading...", "Загрузка..."
+        error = "Error occurred", "Произошла ошибка"
+        success = "Success!", "Успех!"
+    }
+}

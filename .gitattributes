@@ -1,3 +1,19 @@
-# Auto detect text files and perform LF normalization
-*.ling linguist-language=Ling linguist-detectable
-*.ling text
+
+**/*.ling linguist-language=Ling linguist-detectable=true
+**/*.ling linguist-vendored=false
+**/*.ling linguist-documentation=false
+
+*.ling linguist-language=Ling
+./*.ling linguist-language=Ling
+js/test/samples/*.ling linguist-language=Ling
+js/**/*.ling linguist-language=Ling
+test/**/*.ling linguist-language=Ling
+tests/**/*.ling linguist-language=Ling
+samples/**/*.ling linguist-language=Ling
+examples/**/*.ling linguist-language
+**/*.ling text
+**/*.ling eol=lf
+
+grammars/ling.tmLanguage.json linguist-vendored=true linguist-language=JSON
+
+* text=auto

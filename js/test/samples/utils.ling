@@ -1,0 +1,38 @@
+// Вспомогательные функции
+package utils {
+    // Работа с датами
+    format_date(date, format = "short") {
+        match format == "long": date[0..10]
+        match format == "full": date
+        date[0..5]
+    }
+    
+    // Конкатенация с разделителем
+    join(items, separator = ", ") {
+        /*
+        let result = ""
+        for item in items {
+            result = result + separator + item
+        }
+        result[separator.length..]
+        
+        этого всего нет в языке ээ
+        */
+    }
+    
+    // Обработка опциональных значений
+    safe_get(value?) {
+        match value == null: "N/A"
+        value
+    }
+    
+    /**
+     * Функция для приветствия пользователя
+     * с учётом времени суток
+     */
+    smart_greet(name, hour) {
+        match hour < 12: "Good morning, ${name}!"
+        match hour < 18: "Good afternoon, ${name}!"
+        "Good evening, ${name}!"
+    }
+}

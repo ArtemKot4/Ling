@@ -1,0 +1,8 @@
+// Главный файл приложения
+define langs = en-US, ru-RU, es-ES
+define encoding = "utf-8"
+
+package app {
+    name = "MyApp", "МоёПриложение", "MiAplicación"
+    version = "1.0.0"
+}
