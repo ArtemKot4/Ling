@@ -1,7 +1,7 @@
 import { ELingTokenType } from "../ELingTokenType";
-import { LingParser, IBinaryOperationNode } from "../LingParser";
+import { LingParser } from "../LingParser";
 import { StatementHelper } from "../StatementHelper";
-import { ArithmeticExpression } from "./ArithmeticExpression";
+import { ArithmeticExpression, IBinaryOperationNode } from "./ArithmeticExpression";
 
 export interface IArgumentDescription {
     type: ELingTokenType, value: string | IBinaryOperationNode

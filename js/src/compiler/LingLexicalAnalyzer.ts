@@ -2,6 +2,7 @@ import { ELingTokenType } from "./ELingTokenType";
 import LingToken from "./LingToken";
 
 export default class LingLexicalAnalyzer {
+    public static FLAGS_REGEXP: RegExp = /i|g|m|s|u|y|d/;
     public line: number = 0;
     public position: number = 0;
     public column: number = 0;
@@ -38,6 +39,31 @@ export default class LingLexicalAnalyzer {
         return char >= "0" && char <= "9";
     }
 
+    public tokenizeRegexp(): LingToken {
+        this.advance();
+        let regexp = "";
+        while(true) {
+            if(this.currentChar == null) {
+                this.throwError("Unclosed regular expression");
+            }
+            if(this.currentChar == "/") {
+                this.advance();
+                regexp += "|";
+                while(this.currentChar != null && !this.isWhitespace(this.currentChar)) {
+                    if(!LingLexicalAnalyzer.FLAGS_REGEXP.test(this.currentChar)) {
+                        this.throwError(`Expected valid regular expression flag, not "${this.currentChar}"`)
+                    }
+                    regexp += this.currentChar;
+                    this.advance();
+                }
+                break;
+            }
+            regexp += this.currentChar;
+            this.advance();
+        }
+        return this.addToken(ELingTokenType.REGEXP, regexp);
+    }
+
     public tokenizeString(): LingToken {
         this.advance();
         let string = "";
@@ -45,7 +71,6 @@ export default class LingLexicalAnalyzer {
         while(true) {
             if(this.currentChar == null) {
                 this.throwError(`Unclosed string`);
-                break;
             }
             if(this.hasOpenedStringExpression == false && this.peek(-1) != "\\" && this.currentChar == "$" && this.peek() == "{") {
                 this.hasOpenedStringExpression = true;
@@ -53,9 +78,12 @@ export default class LingLexicalAnalyzer {
                 this.addToken(ELingTokenType.PLUS);
                 this.addToken(ELingTokenType.OPEN_RBRACKET);
                 this.advance(2); // ${
-
+                const startTokenLength = this.tokens.length;
                 while(true) {
                     if(this.currentChar == "}" as any) {
+                        if(this.tokens.length == startTokenLength) {
+                            this.throwError("Inside string expression cannot be empty");
+                        }
                         this.hasOpenedStringExpression = false;
                         const closeToken = this.addToken(ELingTokenType.CLOSE_RBRACKET);
                         this.advance(); // }
@@ -143,6 +171,7 @@ export default class LingLexicalAnalyzer {
                 this.skipLongComment();
                 return this.next();
             }
+            return this.tokenizeRegexp();
         }
         // if(this.currentChar == "\\" && this.peek() == "\\") {
         //     this.advance(2);
@@ -161,19 +190,15 @@ export default class LingLexicalAnalyzer {
         if(ELingTokenType.isKeyword(word)) {
             return this.tokenizeKeyword(word);
         } else {
-            const token = this.tokenizeIdentifier(word);
-            if(token != null) {
-                return token;
+            if(!this.isValidWord(word)) {
+                this.throwError(`Unexpected ${word}`);
             }
+            return this.tokenizeIdentifier(word);
         }
-        this.throwError(`Unexpected ${this.currentChar}`)
     }
 
     public tokenizeIdentifier(text: string): LingToken {
-        if(this.isValidWord(text)) {
-            return this.addToken(ELingTokenType.IDENTIFIER, text);
-        } 
-        return null;
+        return this.addToken(ELingTokenType.IDENTIFIER, text);
     }
 
     public tokenizeKeyword(keyword: string): LingToken {
@@ -183,7 +208,7 @@ export default class LingLexicalAnalyzer {
     public buildID(): string {
         let string = "";
 
-        while(this.currentChar && this.isValidIdentifierChar(this.currentChar)) {
+        while(this.currentChar != null && this.isValidIdentifierChar(this.currentChar)) {
             string += this.currentChar;
             this.advance();
         }
@@ -191,15 +216,18 @@ export default class LingLexicalAnalyzer {
     }
 
     public isValidIdentifierChar(char: string): boolean {
-        return !this.isWhitespace(char) && !ELingTokenType.isOperator(char) && /[a-zA-Z0-9_.\-]/i.test(char);
+        return !this.isWhitespace(char) && !ELingTokenType.isOperator(char) //&& /[a-zA-Z0-9_.\-]/i.test(char);
     } 
 
     public isValidWord(word: string): boolean {
         if(this.isDigit(word[0])) {
             this.throwError("Unexpected number");
         }
+        if(!/^[a-zA-Z0-9_]*$/.test(word)) {
+            return false;
+        }
         if(word.endsWith(".")) {
-            this.throwError(`Unexpected last point in package name: "${word}"`);
+            this.throwError(`Unexpected last point at "${word}"`);
         }
         return true;
     }
@@ -241,11 +269,11 @@ export default class LingLexicalAnalyzer {
 }
 
 const text = `
+
 package aboba {
     hello(a=10) {
         a
     }
-    b = 20
     ${'c = "hello ${10 + 5}! ${"lol${hi hi}" + 10}"'}
 }
 
@@ -255,6 +283,6 @@ package heh {
 
 `
 
-const la = new LingLexicalAnalyzer(text, "aboba.ling");
-la.tokenize();
-ELingTokenType.printTokens(la, 6);
+// const la = new LingLexicalAnalyzer(text, "aboba.ling");
+// la.tokenize();
+// ELingTokenType.printTokens(la);

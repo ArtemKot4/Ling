@@ -1,7 +1,6 @@
 import LingLexicalAnalyzer from "./LingLexicalAnalyzer";
 
 export enum ELingTokenType {
-    
     /**
      * `{`
      */
@@ -26,17 +25,22 @@ export enum ELingTokenType {
      * `)`
      */
     CLOSE_RBRACKET,
-
+    /**
+     * `<`
+     */
+    OPEN_ABRACKET,
+    /**
+     * `>`
+     */
+    CLOSE_ABRACKET,
     /**
      * `=`
      */
     EQUAL,
-
     /**
      * `,`
      */
     COMMA,
-
     /**
      * `define`
      */
@@ -45,11 +49,14 @@ export enum ELingTokenType {
      * `package`
      */
     PACKAGE,
-
     /**
      * `"any"`
      */
     STRING,
+    /**
+     * `/any/`
+     */
+    REGEXP,
     /**
      * `[0-9]`
      */
@@ -58,7 +65,6 @@ export enum ELingTokenType {
      * method: `process_ex(a, b) {}` -> `process_ex = IDENTIFIER;`, translation: `a = "hello", b { "hello" }` -> `a = IDENTIFIER, b = IDENTIFIER`
      */
     IDENTIFIER,
-
     /**
      * `*`
      */
@@ -91,14 +97,26 @@ export enum ELingTokenType {
      * `/`
      */
     SLASH,
-    ///**
-    // * `_`
-    // */
-    //UNDERSCORE
     /**
      * `match`
      */
     MATCH,
+    /**
+     * `and`
+     */
+    AND,
+    /**
+     * `or`
+     */
+    OR,
+    /**
+     * `not`
+     */
+    NOT,
+    /**
+     * `in`
+     */
+    IN
 }
 
 export namespace ELingTokenType {
@@ -121,13 +139,19 @@ export namespace ELingTokenType {
         ":": ELingTokenType.COLON,
         "|": ELingTokenType.PIPE,
         "/": ELingTokenType.SLASH,
+        ">": ELingTokenType.OPEN_ABRACKET,
+        "<": ELingTokenType.CLOSE_ABRACKET
         //"_": ELingTokenType.UNDERSCORE
     };
 
     export const keywords = {
         "define": ELingTokenType.DEFINE,
         "package": ELingTokenType.PACKAGE,
-        "match": ELingTokenType.MATCH
+        "match": ELingTokenType.MATCH,
+        "and": ELingTokenType.AND,
+        "or": ELingTokenType.OR,
+        "not": ELingTokenType.NOT,
+        "in": ELingTokenType.IN
     };
 
     export function isOperator(text: string): boolean {

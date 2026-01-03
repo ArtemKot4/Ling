@@ -6,19 +6,6 @@ import LingExpression from "./expressions/LingExpression";
 
 export type LingPacket = Record<string, string | Record<string, string>>;
 
-export interface IBinaryOperationNode {
-    left: ExpressionValue;
-    right: ExpressionValue;
-    operation: ELingTokenType; // PLUS, MINUS, ASTERISK, SLASH
-}
-
-export type ExpressionValue = 
-    | { type: "string"; value: string }
-    | { type: "number"; value: number }
-    | { type: "argument"; name: string }
-    | { type: "package"; name: string }
-    | IBinaryOperationNode; 
-
 export class LingParser {
     public static expressions: [typeof LingExpression.find, new (...args: any[]) => LingExpression][] = []
     public static packets: LingPacket = {};
