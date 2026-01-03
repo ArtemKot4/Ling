@@ -1,6 +1,6 @@
 import { ELingTokenType } from "../ELingTokenType";
 import { LingParser } from "../LingParser";
-import LingToken from "../LingToken";
+import { LingToken } from "../LingToken";
 import { StatementHelper } from "../StatementHelper";
 import ExpressionStatement from "./ExpressionStatement";
 import LingExpression from "./LingExpression";

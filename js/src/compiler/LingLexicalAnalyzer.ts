@@ -1,5 +1,5 @@
 import { ELingTokenType } from "./ELingTokenType";
-import LingToken from "./LingToken";
+import { LingToken } from "./LingToken";
 
 export default class LingLexicalAnalyzer {
     public static FLAGS_REGEXP: RegExp = /i|g|m|s|u|y|d/;

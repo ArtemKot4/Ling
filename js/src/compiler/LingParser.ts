@@ -1,7 +1,7 @@
 import { ELingTokenType } from "./ELingTokenType";
 import { IDefineSettings } from "./expressions/LingDefineExpression";
 import LingLexicalAnalyzer from "./LingLexicalAnalyzer";
-import LingToken from "./LingToken";
+import { LingToken } from "./LingToken";
 import LingExpression from "./expressions/LingExpression";
 
 export type LingPacket = Record<string, string | Record<string, string>>;

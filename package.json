@@ -1,5 +1,9 @@
 {
-  "devDependencies": {
-    "@types/node": "^25.0.3"
-  }
+    "devDependencies": {
+        "@types/node": "^25.0.3"
+    },
+    "linguist": {
+        "language": "Ling",
+        "grammar": "./plugin/syntaxes/ling.tmLanguage.json"
+    }
 }

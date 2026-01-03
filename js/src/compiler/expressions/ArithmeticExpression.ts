@@ -1,7 +1,7 @@
 import { ELingTokenType } from "../ELingTokenType";
 import LingLexicalAnalyzer from "../LingLexicalAnalyzer";
 import { LingParser } from "../LingParser";
-import LingToken from "../LingToken";
+import { LingToken } from "../LingToken";
 
 export interface IBinaryOperationNode {
     left: ExpressionValue;

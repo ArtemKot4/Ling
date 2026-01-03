@@ -2,12 +2,22 @@ define {
     langs = en-US, ru-RU
     encoding = "utf-8"
     unexpected:en-US(key) {
-        "undefined key ${key}"
+        "undefined key ${key}" 
     }
     unexpected(key) {
         "неизвестный ключ ${key}"
     }
 }
+define langs = ru-RU, ru-RU
+
+package math {
+    is_number(a = 10) {
+        a in /^\d+$/
+    }
+
+    test = math.is_number(10)
+}
+
 
 package page {
     sayhi:ru-RU() {
