@@ -1,0 +1,12 @@
+linguist:
+  detected: true
+  language: "Ling"
+  aliases: ["ling-lang", "ling"]
+  color: "#3178c6"
+  extensions: [".ling"]
+  tm_scope: source.ling
+  ace_mode: text
+  codemirror_mode: text
+  codemirror_mime_type: text/x-ling
+  wrap: false
+  type: "programming"

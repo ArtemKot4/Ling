@@ -1,0 +1,218 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Ling",
+	"scopeName": "source.ling",
+	"patterns": [
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#regex"
+		},
+		{
+			"include": "#definitions"
+		},
+		{
+			"include": "#language_tags"
+		},
+		{
+			"include": "#packages"
+		},
+		{
+			"include": "#functions"
+		},
+		{
+			"include": "#expressions"
+		}
+	],
+	"repository": {
+		"language_tags": {
+			"patterns": [
+				{
+					"name": "constant.numeric.ling",
+					"match": "\\b[a-z]{2}-(?:[A-Z]{2,3}|\\d{3})\\b"
+				}
+			]
+		},
+		"comments": {
+			"patterns": [
+				{
+					"name": "comment.line.double-slash.ling",
+					"match": "//.*"
+				},
+				{
+					"name": "comment.block.ling",
+					"begin": "/\\*",
+					"end": "\\*/"
+				}
+			]
+		},
+		"strings": {
+			"patterns": [
+				{
+					"name": "string.quoted.double.ling",
+					"begin": "\"",
+					"end": "\"",
+					"patterns": [
+						{
+							"name": "constant.character.escape.ling",
+							"match": "\\\\."
+						},
+						{
+							"name": "keyword.control.embedded.ling",
+							"begin": "(\\$\\{)",
+							"end": "(\\})",
+							"beginCaptures": {
+								"1": {"name": "keyword.control.embedded.ling"}
+							},
+							"endCaptures": {
+								"1": {"name": "keyword.control.embedded.ling"}
+							},
+							"patterns": [
+								{
+									"include": "#expressions"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		"regex": {
+			"patterns": [
+				{
+					"name": "string.regexp.ling",
+					"begin": "/(?![*/])",
+					"end": "/[gimsuyd]*",
+					"patterns": [
+						{
+							"name": "constant.character.escape.regexp",
+							"match": "\\\\."
+						},
+						{
+							"name": "meta.embedded.expression.regexp.ling",
+							"begin": "\\$\\{",
+							"end": "\\}",
+							"patterns": [
+								{
+									"include": "#expressions"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		"definitions": {
+			"patterns": [
+				{
+					"name": "keyword.control.define.ling",
+					"match": "\\bdefine\\b"
+				},
+				{
+					"begin": "\\bdefine\\s*\\{",
+					"end": "\\}",
+					"contentName": "meta.definition.block.ling",
+					"patterns": [
+						{
+							"include": "#definition_assignments"
+						}
+					]
+				},
+				{
+					"name": "entity.name.function.ling",
+					"match": "(?<=\\bdefine\\s+)\\w+(?=\\s*\\()"
+				},
+				{
+					"begin": "(?<=\\bdefine\\s+)(\\w+)(\\s*)(=)",
+					"end": "(?=;|$|\\n)",
+					"contentName": "meta.definition.value.ling",
+					"captures": {
+						"1": {"name": "variable.parameter.ling"},
+						"3": {"name": "keyword.operator.assignment.ling"}
+					},
+					"patterns": [
+						{
+							"include": "#definition_assignments"
+						}
+					]
+				}
+			]
+		},
+		"definition_assignments": {
+			"patterns": [
+				{
+					"include": "#language_tags"
+				},
+				{
+					"match": ",",
+					"name": "punctuation.separator.comma.ling"
+				},
+				{
+					"include": "#strings"
+				},
+				{
+					"include": "#expressions"
+				}
+			]
+		},
+		"packages": {
+			"patterns": [
+				{
+					"name": "keyword.control.package.ling",
+					"match": "\\bpackage\\b"
+				},
+				{
+					"name": "entity.name.type.package.ling",
+					"match": "(?<=\\bpackage\\s+)[\\w.]+"
+				}
+			]
+		},
+		"functions": {
+			"patterns": [
+				{
+					"name": "entity.name.function.ling",
+					"begin": "\\b(\\w+)(:)([a-z]{2}-[A-Z]{2,3})?(?=\\s*\\()",
+					"end": "(?=\\s*\\()",
+					"captures": {
+						"1": {"name": "entity.name.function.ling"},
+						"2": {"name": "punctuation.separator.language.ling"},
+						"3": {"name": "constant.numeric.ling"}
+					}
+				},
+				{
+					"name": "entity.name.function.ling",
+					"match": "\\b\\w+(?=\\s*\\()"
+				},
+				{
+					"name": "keyword.control.match.ling",
+					"match": "\\bmatch\\b"
+				}
+			]
+		},
+		"expressions": {
+			"patterns": [
+				{
+					"name": "keyword.operator.ling",
+					"match": "\\+|\\-|\\*|/|\\*\\*|==|!=|>=|<=|>|<|\\?"
+				},
+				{
+					"name": "keyword.operator.word.ling",
+					"match": "\\b(and|or|not|in)\\b"
+				},
+				{
+					"name": "constant.numeric.ling",
+					"match": "\\b\\d+(\\.\\d+)?(_\\d+)*\\b"
+				},
+				{
+					"name": "variable.parameter.ling",
+					"match": "\\b\\w+\\b"
+				}
+			]
+		}
+	},
+	"fileTypes": ["ling"]
+}
