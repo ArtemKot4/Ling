@@ -36,6 +36,8 @@ define unexpected(key) {
 
 Пакеты позволяют запаковывать переводы в нечто похожее на объекты json. Создаются при помощи ключевых слов `package`.
 
+Синтаксис: `package название {}`
+
 ```ling
 define langs = ru-RU, en-US
 
@@ -51,6 +53,10 @@ package navbar.faq {
     idea = "Идея", "Idea"
 }
 
+//или
+package "navbar.faq" {
+    info = "Внутри строки имя пакета может быть любым", "Inside string package name can by any"
+}
 
 //перевод, выдаваемый в случае попытки получить незарегистрированный перевод в пакете
 

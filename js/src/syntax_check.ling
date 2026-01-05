@@ -1,40 +1,38 @@
 define { 
     langs = en-US, ru-RU
     encoding = "utf-8"
-    unexpected:en-US(key) {
+    unexpected:ru-RU(key) {
         "undefined key ${key}" 
     }
     unexpected(key) {
         "неизвестный ключ ${key}"
     }
 }
-define langs = ru-RU, ru-RU
 
-package math {
-    is_number(a = 10) {
-        a in /^\d+$/
-    }
+//define langs = ru-RU
 
-    test = math.is_number(10)
+package hello {
+    package guy.lol {
+        a() {
+            "a ${1}"
+        }
+    }
 }
 
-
-package page {
-    sayhi:ru-RU() {
-        "хай"
-    }
-    sayhi() {
-        "hi"
-    }
-
-    package default.navbar {
-        saygoodbye:ru-RU() {
-            "goodbye"
+package howdy {
+    package man {
+        package "and" {
+            b() {
+                "random"
+            }
         }
-        /*
-        narrowing_example:en-UK() {
-            "throws error because en-UK is not defined"
+    }
+}
+
+package goodbye {
+    package human {
+        c() {
+            "a"
         }
-        */
     }
 }

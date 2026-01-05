@@ -3,12 +3,12 @@ import { IDefineSettings } from "./expressions/LingDefineExpression";
 import LingLexicalAnalyzer from "./LingLexicalAnalyzer";
 import { LingToken } from "./LingToken";
 import LingExpression from "./expressions/LingExpression";
-
-export type LingPacket = Record<string, string | Record<string, string>>;
+import { LingFunction } from "./expressions/LingFunction";
+import { ArithmeticExpression } from "./expressions/ArithmeticExpression";
 
 export class LingParser {
     public static expressions: [typeof LingExpression.find, new (...args: any[]) => LingExpression][] = []
-    public static packets: LingPacket = {};
+    
     public tokenIndex: number;
     public currentToken: LingToken;
     public openedField: boolean;
@@ -17,10 +17,10 @@ export class LingParser {
     public constructor(public lexicalAnalyzer: LingLexicalAnalyzer, public langs: string[] = []) {
         this.openedField = false;
         this.settings = {
-            langs: langs,
             encoding: "utf-8",
+            langs: [],
             unexpected: {}
-        };
+        }
     }
 
     public throwError(text: string): void {
@@ -29,19 +29,6 @@ export class LingParser {
 
     public warn(text: string): void {
         console.log("Ling syntax warn: " + text);
-    }
-
-    public createPackages(path: string[], packageName: string): void {
-        const pack = this.getPackage(path);  
-        pack[packageName] ??= {}
-    }
-
-    public getPackage(path: string[]): LingPacket {
-        let object = LingParser.packets;
-        for(const packageName of path) {
-            object = (object[packageName] ??= {}) as LingPacket;
-        }
-        return object;
     }
 
     public next(index: number = 1): LingToken {
@@ -83,14 +70,27 @@ export class LingParser {
     }
 
     public parse(): void {
-        for(this.tokenIndex = 0; this.tokenIndex < this.lexicalAnalyzer.tokens.length; this.tokenIndex++) {
+        this.tokenIndex = 0;
+        
+        while (this.tokenIndex < this.lexicalAnalyzer.tokens.length) {
             this.currentToken = this.lexicalAnalyzer.tokens[this.tokenIndex];
-
+            
+            let parsed = false;
+            
             for(const [is, expression] of LingParser.expressions) {
                 if(is(this)) {
                     new expression().parse(this);
+                    parsed = true;
+                    break;
                 }
             }
+            
+            if (!parsed) {
+                // Если ни одно выражение не совпало, пропускаем токен
+                this.tokenIndex++;
+            }
+            // Если выражение совпало, НЕ инкрементируем tokenIndex!
+            // expression.parse() сам продвинет парсер
         }
     }
 }

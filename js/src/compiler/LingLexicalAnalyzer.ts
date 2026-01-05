@@ -78,10 +78,10 @@ export default class LingLexicalAnalyzer {
                 this.addToken(ELingTokenType.PLUS);
                 this.addToken(ELingTokenType.OPEN_RBRACKET);
                 this.advance(2); // ${
-                const startTokenLength = this.tokens.length;
+                let token;
                 while(true) {
                     if(this.currentChar == "}" as any) {
-                        if(this.tokens.length == startTokenLength) {
+                        if(token == null) {
                             this.throwError("Inside string expression cannot be empty");
                         }
                         this.hasOpenedStringExpression = false;
@@ -95,7 +95,7 @@ export default class LingLexicalAnalyzer {
                         this.advance(); // "
                         return closeToken;
                     }
-                    const token = this.next();
+                    token = this.next();
                     
                     if(token == null) {
                         this.throwError("Unexpected end of inside string expression");
@@ -173,9 +173,6 @@ export default class LingLexicalAnalyzer {
             }
             return this.tokenizeRegexp();
         }
-        // if(this.currentChar == "\\" && this.peek() == "\\") {
-        //     this.advance(2);
-        // }
         
         if(this.isValidNumber()) {
             return this.tokenizeNumber();
@@ -186,12 +183,12 @@ export default class LingLexicalAnalyzer {
         if(ELingTokenType.isOperator(this.currentChar)) {
             return this.tokenizeOperator();
         }
-        const word = this.buildID();
+        const word = this.buildID().trimStart();
         if(ELingTokenType.isKeyword(word)) {
             return this.tokenizeKeyword(word);
         } else {
             if(!this.isValidWord(word)) {
-                this.throwError(`Unexpected ${word}`);
+                return null;
             }
             return this.tokenizeIdentifier(word);
         }
@@ -222,12 +219,19 @@ export default class LingLexicalAnalyzer {
     public isValidWord(word: string): boolean {
         if(this.isDigit(word[0])) {
             this.throwError("Unexpected number");
+            return false;
         }
-        if(!/^[a-zA-Z0-9_]*$/.test(word)) {
+        if(word.startsWith(".")) {
+            this.throwError("Expected name of packet");
+            return false;
+        }
+        if(!/^[a-zA-Z0-9_.]*$/.test(word)) {
+            this.throwError(`Unexpected ${word}`);
             return false;
         }
         if(word.endsWith(".")) {
             this.throwError(`Unexpected last point at "${word}"`);
+            return false;
         }
         return true;
     }

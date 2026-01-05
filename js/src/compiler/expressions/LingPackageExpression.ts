@@ -1,24 +1,28 @@
 import { ELingTokenType } from "../ELingTokenType";
+import { ILingPackage, LingManager } from "../LingLocalization";
 import { LingParser } from "../LingParser";
-import { LingToken } from "../LingToken";
 import { StatementHelper } from "../StatementHelper";
 import ExpressionStatement from "./ExpressionStatement";
 import LingExpression from "./LingExpression";
-import { LingFunctionExpression } from "./LingFunction";
+import { LingFunction } from "./LingFunction";
 
 @ExpressionStatement
 export class LingPackageExpression extends LingExpression {
-    public path: string[] = [];
     public currentPackage: ReturnType<typeof this.getPackage>;
     public name: string;
 
     public override parse(parser: LingParser): void {
-        this.name = parser.expect(ELingTokenType.IDENTIFIER, "Expected packet name").keyword;
         parser.next();
-        if(!parser.match(ELingTokenType.OPEN_CBRACKET)) {
-            parser.throwError(`Expected "{", but got "${parser.peek(0).keyword}"`);
+        if(!parser.match(ELingTokenType.IDENTIFIER) && !parser.match(ELingTokenType.STRING)) {
+            parser.throwError(`Expected package name`);
         }
-        this.createPackages(parser, this.name.split("."), this.name);
+        this.name ??= parser.currentToken.keyword;
+        parser.expect(ELingTokenType.OPEN_CBRACKET, `Expected "{", but got "${parser.peek(0).keyword}"`)
+
+        if(parser.match(ELingTokenType.CLOSE_CBRACKET, 1)) {
+            parser.throwError(`Package "${this.name}" is empty`);
+        }
+        this.createPackages(parser);
         this.parseBlockStatement(parser);
     }
 
@@ -28,58 +32,39 @@ export class LingPackageExpression extends LingExpression {
                 parser.throwError(`Unclosed statement of package "${this.name}"`);
             }
             if(parser.match(ELingTokenType.CLOSE_CBRACKET)) {
-                this.path.pop();
                 parser.next();
-                break;
+                return;
+            }
+            if(parser.match(ELingTokenType.PACKAGE)) {
+                const nestedPackage = new LingPackageExpression();
+                nestedPackage.name = `${this.name}.${parser.peek(1).keyword}`;
+                nestedPackage.parse(parser);
+                continue;
             }
             if(StatementHelper.isFunction(parser)) {
                 this.addFunction(parser);
-                continue;
-            }
-            if(parser.match(ELingTokenType.PACKAGE)) {
-                this.addPackage(parser);
                 continue;
             }
             parser.next();
         }
     }
 
-    public appendPath(name: string): void {
-        this.path.push(name);
-    }
-
     public addFunction(parser: LingParser): void {
-        this.currentPackage.functions ??= {};
-        const lingFunctionPath = this.currentPackage.functions[parser.currentToken.keyword] ??= {}
-        const lingFunction = new LingFunctionExpression().parse(parser);
+        const functionName = parser.peek(0).keyword;
+        const packageFunctions = this.currentPackage.functions ??= {};
+        const currentFunction = new LingFunction().parse(parser);
+        const functionObject = packageFunctions[functionName] ??= {};
 
-        if(lingFunction.lang != null) {
-            lingFunctionPath[lingFunction.lang] = lingFunction;
-        } else {
-            lingFunctionPath.main = lingFunction;
-        }
+        functionObject[currentFunction.lang ?? "default"] = currentFunction;
     }
 
-    public addPackage(parser: LingParser): void {
-        this.appendPath(this.name);
-        this.parse(parser);
-    }
-
-    public createPackages(parser: LingParser, path: string[], id: string): void {
-        if(path.length >= 2) {
-            const name = path.pop();
-            this.path = this.path.concat(path);
-            parser.createPackages(this.path, name);
-            this.currentPackage = this.getPackage(parser, name);
-        } else {
-            parser.createPackages(this.path, id);
-            this.currentPackage = this.getPackage(parser, id);
-        }
+    public createPackages(parser: LingParser): void {
+        this.currentPackage = LingManager.createPackage(this.name)
         parser.next();
     }
 
-    public getPackage(parser: LingParser, name: string): Record<string, any> {
-        return parser.getPackage([...this.path, name]);
+    public getPackage(): ILingPackage {
+        return LingManager.getPackage(this.name);
     }
 
     public static find(parser: LingParser): boolean {

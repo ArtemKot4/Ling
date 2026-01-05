@@ -10,7 +10,8 @@
 		"skipLibCheck": true,
 		"moduleResolution": "node",
 		"esModuleInterop": true,
-		"resolveJsonModule": true
+		"resolveJsonModule": true,
+        "experimentalDecorators": true
 	},
 	"include": ["./src"],
 	"exclude": ["node_modules", ".vscode-test"]

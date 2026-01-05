@@ -1,5 +1,3 @@
-import LingLexicalAnalyzer from "./LingLexicalAnalyzer";
-
 export enum ELingTokenType {
     /**
      * `{`
@@ -98,10 +96,6 @@ export enum ELingTokenType {
      */
     SLASH,
     /**
-     * `?`
-     */
-    QUESTION,
-    /**
      * `match`
      */
     MATCH,
@@ -120,7 +114,9 @@ export enum ELingTokenType {
     /**
      * `in`
      */
-    IN
+    IN,
+    QUESTION,
+    DOCUMENTATION
 }
 
 export namespace ELingTokenType {
@@ -140,12 +136,12 @@ export namespace ELingTokenType {
         "-": ELingTokenType.MINUS,
         ";": ELingTokenType.SEMICOLON,
         "%": ELingTokenType.PERCENT,
-        "?": ELingTokenType.QUESTION,
         ":": ELingTokenType.COLON,
         "|": ELingTokenType.PIPE,
         "/": ELingTokenType.SLASH,
         ">": ELingTokenType.OPEN_ABRACKET,
         "<": ELingTokenType.CLOSE_ABRACKET,
+        "?": ELingTokenType.QUESTION
         //"_": ELingTokenType.UNDERSCORE
     };
 
@@ -181,23 +177,5 @@ export namespace ELingTokenType {
             throw new ReferenceError(`ELingTokenType: type "${type}" is not exists`);
         }
         return typeName;
-    }
-
-    export function getPrintTypeName(type: ELingTokenType): string {
-        return getTypeName(type).toLowerCase();
-    }
-
-    export function printTokens(lexicalAnalyzer: LingLexicalAnalyzer, startLine: number = 0, endLine?: number): void {
-        for(let i = 0; i < lexicalAnalyzer.tokens.length; i++) {
-            const token = lexicalAnalyzer.tokens[i]; 
-            if(token == null || endLine != null && token.line == endLine + 1) {
-                return;
-            }
-            if(token.line < startLine) {
-                continue;
-            }
-            const keyword = token.keyword == null ? null : `"${token.keyword}"`;
-            console.log(`| ${token.line}:${token.column} type: ${ELingTokenType.getTypeName(token.type)}, keyword: ${keyword}`)
-        }
     }
 }

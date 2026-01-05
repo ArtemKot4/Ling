@@ -3,7 +3,7 @@ import { LingParser } from "../LingParser";
 import { StatementHelper } from "../StatementHelper";
 import ExpressionStatement from "./ExpressionStatement";
 import LingExpression from "./LingExpression";
-import { ILingFunctionNode, LingFunctionExpression } from "./LingFunction";
+import { ILingFunctionNode, LingFunction } from "./LingFunction";
 
 export interface IDefineSettings {
     langs: string[],
@@ -54,7 +54,7 @@ export class LingDefineExpression extends LingExpression {
             if(!StatementHelper.isFunction(parser)) {
                 parser.throwError(`Expected function`);
             }
-            this.applyUnexpected(parser, new LingFunctionExpression().parse(parser));
+            this.applyUnexpected(parser, new LingFunction().parse(parser));
         }
     }
 
@@ -84,7 +84,7 @@ export class LingDefineExpression extends LingExpression {
                 if(parser.currentToken.keyword != "unexpected") {
                     parser.throwError(`Unexpected method expected, but got "${parser.currentToken.keyword}"`);
                 } else {
-                    this.applyUnexpected(parser, new LingFunctionExpression().parse(parser));
+                    this.applyUnexpected(parser, new LingFunction().parse(parser));
                 }
             }
         }
@@ -103,7 +103,7 @@ export class LingDefineExpression extends LingExpression {
     }
 
     public applyUnexpected(parser: LingParser, unexpected: ILingFunctionNode): void {
-        parser.settings.unexpected[unexpected.lang || "main"] = unexpected;
+        parser.settings.unexpected[unexpected.lang || "default"] = unexpected;
     }
 
     public override parse(parser: LingParser): void {

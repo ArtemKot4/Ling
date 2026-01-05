@@ -1,5 +1,6 @@
 import { ELingTokenType } from "../ELingTokenType";
 import LingLexicalAnalyzer from "../LingLexicalAnalyzer";
+import { LingFunctionArgumentType, LingFunctionReturnTypes } from "../LingLocalization";
 import { LingParser } from "../LingParser";
 import { LingToken } from "../LingToken";
 
@@ -20,6 +21,10 @@ export class ArithmeticExpression {
     public parse(parser: LingParser) {
         //final boss
     }
+
+    public calculate<LingReturnType extends LingFunctionReturnTypes>(args?: LingFunctionArgumentType[]): LingReturnType {
+        throw "Not implemented"
+    }
 }
 
 const lA: LingLexicalAnalyzer = new LingLexicalAnalyzer(`
@@ -28,7 +33,7 @@ package funcs {
         a > 0 and b > 0
     }
     regexp(a) {
-        a in /[0-9]/uiwg
+        a in /[0-9]/uig
     }
 }
 
@@ -36,9 +41,9 @@ package vars {
     ex = ${'"hello ${"Artem" + "!"}" + 1'}
 }
 `);
-lA.tokenize();
-ELingTokenType.printTokens(lA);
+// lA.tokenize();
+// ELingTokenType.printTokens(lA);
 
-const parser = new LingParser(lA)
-const exp = new ArithmeticExpression().parse(parser);
-console.log(exp);
+// const parser = new LingParser(lA)
+// const exp = new ArithmeticExpression().parse(parser);
+// console.log(exp);

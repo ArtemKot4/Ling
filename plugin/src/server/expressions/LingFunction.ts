@@ -1,35 +1,41 @@
 import { ELingTokenType } from "../ELingTokenType";
-import { LingFunctionArgumentType } from "../LingLocalization";
-import { LingParser } from "../LingParser";
+import LingToken from "../LingToken";
+import SimpleLSPParser from "../SimpleLSPParser";
 import { StatementHelper } from "../StatementHelper";
-import { ArithmeticExpression, IBinaryOperationNode } from "./ArithmeticExpression";
 
 export interface IArgumentDescription {
-    type: ELingTokenType, value: string | IBinaryOperationNode
+    type: ELingTokenType, value: string | boolean
 }
 
 export interface ILingFunctionNode {
     lang?: string;
     args: Record<string, IArgumentDescription>;
-    returnType: ArithmeticExpression;
+    returnType: "string" | "boolean";
 }
 
-export interface IJSLingFunction<LingReturnType extends string | boolean = string> {
-    (...args: unknown[]): LingReturnType
-}
-
-export class LingFunction {
+export class LingFunctionExpression {
     public lang!: string;
     public args: Record<string, IArgumentDescription> = {};
-    public returnType: ArithmeticExpression; 
+    public returnType: string | boolean; 
+    public tokenID: LingToken;
 
-    public parseArguments(parser: LingParser): void {
-        while(parser.currentToken && parser.currentToken.type != ELingTokenType.CLOSE_RBRACKET) {
-            if(parser.currentToken.type == ELingTokenType.IDENTIFIER) {
+    public parseArguments(parser: SimpleLSPParser): void {
+        while(true) {
+            if(parser.currentToken == null || parser.match(ELingTokenType.OPEN_CBRACKET)) {
+                parser.throwError("Unclosed function argument statement", this.tokenID.position, this.tokenID.position + this.tokenID.keyword.length);
+                return;
+            }
+            if(parser.match(ELingTokenType.CLOSE_RBRACKET)) {
+                break;
+            }
+            if(parser.match(ELingTokenType.IDENTIFIER)) {
                 let value = null;
                 let skip = 1;
-                if(parser.match(ELingTokenType.IDENTIFIER) && parser.match(ELingTokenType.EQUAL, 1)) {
-                    value = parser.peek(2).keyword; //need do parse expressions
+                if(parser.match(ELingTokenType.EQUAL, 1)) {
+                    value = parser.peek(2).keyword;
+                    if(value == null) {
+                        parser.throwError("Expected value for function argument");
+                    }
                     skip = 3;
                 }
                 this.args[parser.currentToken.keyword] = { type: parser.currentToken.type, value: value };
@@ -41,15 +47,23 @@ export class LingFunction {
         }
     }
 
-    public parse(parser: LingParser): this {
+    public parse(parser: SimpleLSPParser): this {
         const name = parser.currentToken.keyword;
+        this.tokenID = {...parser.currentToken};
 
         if(parser.match(ELingTokenType.COLON, 1)) {
             parser.next(2);
+
+            if(!parser.match(ELingTokenType.IDENTIFIER)) {
+                parser.throwError("Expected lang for function");
+                return;
+            }
             StatementHelper.Lang.satisfiesLanguageFormat(parser);
-            const lang = parser.slice(0, 3, (i, token) => token.keyword).join("-");
-            if(parser.settings.langs.includes(lang) == false) {
-                parser.throwError(`Cannot register function "${name}" for not defined lang "${lang}"`)
+            const firstLangToken = parser.peek(0);
+            const secondLangToken = parser.peek(2);
+            const lang = firstLangToken.keyword + "-" + secondLangToken.keyword;
+            if(parser.langs.includes(lang) == false) {
+                parser.throwError(`Cannot register function "${name}" for not defined lang "${lang}"`, firstLangToken.position, firstLangToken.position + lang.length)
             }
             this.lang = lang;
             parser.next(4);
@@ -65,9 +79,6 @@ export class LingFunction {
         if(!parser.match(ELingTokenType.OPEN_CBRACKET)) {
             parser.throwError(`Expected "{"`);
         }
-        if(parser.match(ELingTokenType.CLOSE_CBRACKET, 1)) {
-            parser.throwError(`Function "${name}" must return expression`);
-        }
         
         while(parser.currentToken != null) {
             const token = parser.next();
@@ -75,7 +86,7 @@ export class LingFunction {
                 break;
             }
             //console.log(ELingTokenType.getPrintTypeName(token.type));
-            this.returnType = new ArithmeticExpression();//this.returnType.push(token); //waiting arithmetic expression
+            this.returnType = "string";
         }
 
         //this.returnType.push(new ArithmeticExpression().parse(parser));
@@ -86,9 +97,5 @@ export class LingFunction {
         }
         parser.next();
         return this;
-    }
-
-    public call(args?: LingFunctionArgumentType[]): ReturnType<IJSLingFunction> {
-        return this.returnType.calculate(args);
     }
 }
