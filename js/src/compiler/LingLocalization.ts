@@ -1,3 +1,4 @@
+import { LingParser } from "./LingParser";
 import { ArithmeticExpression } from "./expressions/ArithmeticExpression";
 import { IJSLingFunction, LingFunction } from "./expressions/LingFunction";
 
@@ -62,6 +63,10 @@ export namespace LingManager {
         return packages[packageName];
     }
 
+    export function getCommonPackage(): ILingPackage {
+        return packages["common"]
+    }
+
     export function createPackage(packageName: string): ILingPackage {
         return packages[packageName] ??= {
             translations: {}
@@ -92,4 +97,54 @@ export namespace LingManager {
         }
         return (translation as ArithmeticExpression)?.calculate();
     }
+
+    export function getFunction(packageName: string, functionName: string, lang: string): IJSLingFunction<string> | LingFunction {
+        return getPackage(packageName)?.functions?.[lang]?.[functionName];
+    }
+
+    export function hasFunction(packageName: string, functionName: string, lang: string): boolean {
+        return getFunction(packageName, functionName, lang) != null;
+    }
+    
+    export function getLangsFor(packageName: string): string[] {
+        const langs = [];
+        const lingPackage = LingManager.getPackage(packageName);
+        if(lingPackage == null) {
+            return langs;
+        }
+        return Object.keys(lingPackage.translations || LingManager.getPackage("common").translations);
+    }
+
+    export function hasLang(packageName: string, lang: string): boolean {
+        const lingPackage = LingManager.getPackage(packageName);
+        if(lingPackage == null) {
+            console.log("debug: package " + packageName + " not defined")
+        }
+        return lang in (lingPackage.translations || LingManager.getCommonPackage().translations);
+    }
+
+    export function applyLangs(parser: LingParser, packageName: string, langs: string[]): void {
+        const lingPackage = LingManager.getPackage(packageName);
+
+        if(lingPackage == null) {
+            parser.throwError(`Cannot apply languages: " + langs + " for undefined package "${packageName}"`)
+        }
+        for(const i in langs) {
+            //console.log(lang);
+            lingPackage.translations[langs[i]] ??= {};
+        }
+    }
+
+    export function clearLangs(parser: LingParser, packageName: string, langs?: string[]): void {
+        const lingPackage = LingManager.getPackage(packageName);
+
+        if(lingPackage == null) {
+            parser.throwError(`Cannot clear languages: " + langs + " for undefined package "${packageName}"`)
+        }
+        for(const lang of (langs != null ? langs : Object.keys(lingPackage.translations))) {
+            delete lingPackage.translations[lang], lingPackage.functions?.[lang];
+        }
+    }
+
+    createPackage("common");
 }

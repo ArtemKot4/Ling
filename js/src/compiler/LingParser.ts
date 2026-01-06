@@ -1,5 +1,4 @@
 import { ELingTokenType } from "./ELingTokenType";
-import { IDefineSettings } from "./expressions/LingDefineExpression";
 import LingLexicalAnalyzer from "./LingLexicalAnalyzer";
 import { LingToken } from "./LingToken";
 import LingExpression from "./expressions/LingExpression";
@@ -12,23 +11,17 @@ export class LingParser {
     public tokenIndex: number;
     public currentToken: LingToken;
     public openedField: boolean;
-    public settings: IDefineSettings;
 
     public constructor(public lexicalAnalyzer: LingLexicalAnalyzer, public langs: string[] = []) {
         this.openedField = false;
-        this.settings = {
-            encoding: "utf-8",
-            langs: [],
-            unexpected: {}
-        }
     }
 
     public throwError(text: string): void {
         throw `Ling SyntaxError: ${text} on line ${this.currentToken.line} and position ${this.currentToken.column}${this.lexicalAnalyzer.fileName ? " at file: " + this.lexicalAnalyzer.fileName.split(".").slice(-2).join(".") : ""}`;
     }
 
-    public warn(text: string): void {
-        console.log("Ling syntax warn: " + text);
+    public throwWarning(text: string): void {
+        console.log(`Ling SyntaxWarning: ${text} on line ${this.currentToken.line} and position ${this.currentToken.column}${this.lexicalAnalyzer.fileName ? " at file: " + this.lexicalAnalyzer.fileName.split(".").slice(-2).join(".") : ""}`);
     }
 
     public next(index: number = 1): LingToken {
@@ -72,25 +65,23 @@ export class LingParser {
     public parse(): void {
         this.tokenIndex = 0;
         
-        while (this.tokenIndex < this.lexicalAnalyzer.tokens.length) {
+        while(this.tokenIndex < this.lexicalAnalyzer.tokens.length) {
             this.currentToken = this.lexicalAnalyzer.tokens[this.tokenIndex];
-            
-            let parsed = false;
+            let applied = false;
             
             for(const [is, expression] of LingParser.expressions) {
                 if(is(this)) {
-                    new expression().parse(this);
-                    parsed = true;
+                    const expressionInstance = new expression();
+                    expressionInstance.parse(this);
+                    expressionInstance.apply(this);
+                    applied = true;
                     break;
                 }
             }
-            
-            if (!parsed) {
-                // Если ни одно выражение не совпало, пропускаем токен
+
+            if(applied == false) {
                 this.tokenIndex++;
             }
-            // Если выражение совпало, НЕ инкрементируем tokenIndex!
-            // expression.parse() сам продвинет парсер
         }
     }
 }

@@ -9,13 +9,21 @@ define {
     }
 }
 
+maintrying(a, b, c) {
+    "hello!"
+}
+
 //define langs = ru-RU
 
 package hello {
-    package guy.lol {
-        a() {
-            "a ${1}"
-        }
+    tocheck(a, b, c) {
+        "a ${1}"
+    }
+    tocheck:ru-RU(a, b, c) {
+        "a ${2}"
+    }
+    tocheck:en-US(a) {
+        "s"
     }
 }
 

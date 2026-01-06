@@ -1,36 +1,49 @@
 import { ELingTokenType } from "../ELingTokenType";
+import { LingManager } from "../LingLocalization";
 import { LingParser } from "../LingParser";
 import { StatementHelper } from "../StatementHelper";
 import ExpressionStatement from "./ExpressionStatement";
 import LingExpression from "./LingExpression";
 import { ILingFunctionNode, LingFunction } from "./LingFunction";
-
-export interface IDefineSettings {
-    langs: string[],
-    encoding: string,
-    unexpected: Record<string, ILingFunctionNode>
-}
+import { LingPackageExpression } from "./LingPackageExpression";
 
 @ExpressionStatement
 export class LingDefineExpression extends LingExpression {
     public static settingList: string[] = ["langs", "encoding", "unexpected"];
+    public packageName!: string;
+    public mainPackage: string;
+    public langs: string[] = [];
+    public unexpectedFunctions: LingFunction[] = [];
 
-    public parseLangs(parser: LingParser): string[] {
-        const langs = [];
+    public override parse(parser: LingParser, packageName: string = "common"): void {
+        parser.next();
+        this.packageName = packageName;
 
+        if(parser.match(ELingTokenType.IDENTIFIER)) {
+            this.parseWithKey(parser);
+        } else if(parser.match(ELingTokenType.OPEN_CBRACKET)) {
+            this.parseWithStatement(parser);
+        } else parser.throwError("Unexpected format for definitions");
+    }
+
+    public apply(parser: LingParser): void {
+        LingManager.applyLangs(parser, this.packageName, this.langs);
+        this.unexpectedFunctions.forEach(unexpected => unexpected.apply(parser, this.packageName));
+    }
+
+    public parseLangs(parser: LingParser): void {
         while(StatementHelper.Lang.isValidLanguageFormat(parser)) {
             const lang = parser.peek(0).keyword + "-" + parser.peek(2).keyword;
-            if(parser.settings.langs.includes(lang)) {
+            if(this.langs.includes(lang)) {
                 parser.throwError(`Unexpected repeating of lang "${lang}"`);
             }
-            langs.push(lang);
+            this.langs.push(lang);
             parser.next(3);
             if(parser.match(ELingTokenType.COMMA)) {
                 parser.next();
                 continue;
             }
         }
-        return langs;
     }
 
     public parseWithKey(parser: LingParser): void {
@@ -39,14 +52,15 @@ export class LingDefineExpression extends LingExpression {
         if(parser.match(ELingTokenType.EQUAL, 1)) {
             parser.next(2);
             if(id == "langs") {
-                this.applyLangs(parser, this.parseLangs(parser));
+                this.parseLangs(parser);
                 return;
             } 
             if(id == "encoding") {
-                this.applyEncoding(parser, parser.expect(ELingTokenType.STRING, "Encoding expected string", 0).keyword);
+                //this.applyEncoding(parser, parser.expect(ELingTokenType.STRING, "Encoding expected string", 0).keyword);
                 return;
             } 
-            parser.throwError(`Unexpected key "${id}"`)
+            const validKeysEnumeration = LingDefineExpression.settingList.reduce((pV, cV, cI) => pV += cV + ", ", "").slice(0, -3);
+            parser.throwError(`Unexpected key "${id}". Are you mean something of ${validKeysEnumeration}?`)
         } else {
             if(id != "unexpected") {
                 parser.throwError(`Expected unexpected function`)
@@ -54,7 +68,7 @@ export class LingDefineExpression extends LingExpression {
             if(!StatementHelper.isFunction(parser)) {
                 parser.throwError(`Expected function`);
             }
-            this.applyUnexpected(parser, new LingFunction().parse(parser));
+            this.parseUnexpected(parser);
         }
     }
 
@@ -69,22 +83,22 @@ export class LingDefineExpression extends LingExpression {
                 break;
             }
             if(parser.currentToken.keyword == "langs") {
-                parser.next(2)
-                this.applyLangs(parser, this.parseLangs(parser));
+                parser.next(2);
+                this.parseLangs(parser);
             }
             if(parser.currentToken.keyword == "encoding") {
                 parser.next(2);
                 if(!parser.match(ELingTokenType.STRING)) {
                     parser.throwError("Excepted string literal for encoding definition");
                 }
-                this.applyEncoding(parser, parser.currentToken.keyword);
+                //this.applyEncoding(parser, parser.currentToken.keyword);
                 parser.next();
             }
             if(StatementHelper.isFunction(parser)) {
                 if(parser.currentToken.keyword != "unexpected") {
                     parser.throwError(`Unexpected method expected, but got "${parser.currentToken.keyword}"`);
                 } else {
-                    this.applyUnexpected(parser, new LingFunction().parse(parser));
+                    this.parseUnexpected(parser);
                 }
             }
         }
@@ -94,27 +108,15 @@ export class LingDefineExpression extends LingExpression {
         }
     }
 
-    public applyLangs(parser: LingParser, langs: string[]) {
-        parser.settings.langs = parser.settings.langs.concat(langs);
+    public parseUnexpected(parser: LingParser): void {
+        const unexpected = new LingFunction();
+        unexpected.parse(parser, this.packageName);
+        this.unexpectedFunctions.push(unexpected);
     }
 
-    public applyEncoding(parser: LingParser, encoding: string): void {
-        parser.settings.encoding = encoding;
-    }
-
-    public applyUnexpected(parser: LingParser, unexpected: ILingFunctionNode): void {
-        parser.settings.unexpected[unexpected.lang || "default"] = unexpected;
-    }
-
-    public override parse(parser: LingParser): void {
-        parser.next();
-
-        if(parser.match(ELingTokenType.IDENTIFIER)) {
-            this.parseWithKey(parser);
-        } else if(parser.match(ELingTokenType.OPEN_CBRACKET)) {
-            this.parseWithStatement(parser);
-        } else parser.throwError("Unexpected format for definitions");
-    }
+    // public applyEncoding(parser: LingParser, encoding: string): void {
+    //     parser.settings.encoding = encoding;
+    // }
 
     public static find(parser: LingParser): boolean {
         return parser.match(ELingTokenType.DEFINE);
