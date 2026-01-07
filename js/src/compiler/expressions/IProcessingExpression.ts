@@ -1,7 +1,7 @@
 import { LingFunctionReturnTypes, LingFunctionArgumentType } from "../../types";
 import { LingParser } from "../LingParser";
+import { LingToken } from "../LingToken";
 
 export interface IProcessingExpression {
-    parse(parser: LingParser);
-    calculate<LingReturnType extends LingFunctionReturnTypes>(args?: LingFunctionArgumentType[]): LingReturnType;
+    parse(tokens: LingToken[]);
 }

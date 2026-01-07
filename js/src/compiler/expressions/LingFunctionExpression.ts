@@ -2,12 +2,13 @@ import { ELingTokenType } from "../ELingTokenType";
 import { LingManager } from "../../package_manager/LingManager";
 import { LingParser } from "../LingParser";
 import { StatementHelper } from "../StatementHelper";
-import { ArithmeticExpression, IBinaryOperationNode } from "./ArithmeticExpression";
+import { ArithmeticExpression, ExpressionValue, IBinaryOperationNode } from "./ArithmeticExpression";
 import ExpressionStatement from "./ExpressionStatement";
 import LingExpression from "./LingExpression";
 import { LingPackageExpression } from "./LingPackageExpression";
 import { LingFunctionReturnTypes, LingFunctionArgumentType } from "../../types";
 import { IProcessingExpression } from "./IProcessingExpression";
+import { ExpressionExecutor } from "../../runtime/ExpressionExecutor";
 
 export interface IArgumentDescription {
     type: ELingTokenType, value: string | IBinaryOperationNode
@@ -15,7 +16,7 @@ export interface IArgumentDescription {
 
 export interface ILingFunctionNode {
     args: Record<string, IArgumentDescription>;
-    returnType: ArithmeticExpression;
+    returnType: ExpressionValue;
 }
 
 export interface IJSLingFunction<LingReturnType extends LingFunctionReturnTypes = string> {
@@ -23,11 +24,11 @@ export interface IJSLingFunction<LingReturnType extends LingFunctionReturnTypes 
 }
 
 @ExpressionStatement
-export class LingFunctionExpression extends LingExpression {
+export class LingFunctionExpression extends LingExpression implements ILingFunctionNode {
     public name: string;
     public lang!: string;
     public args: Record<string, IArgumentDescription> = {};
-    public returnType: IProcessingExpression; 
+    public returnType: ExpressionValue; 
 
     public constructor(ast?: ILingFunctionNode) {
         super();
@@ -71,14 +72,18 @@ export class LingFunctionExpression extends LingExpression {
     }
 
     public parseBody(parser: LingParser): void {
+        let token = parser.next();
+        const tokens = [];
+
         while(parser.currentToken != null) {
-            const token = parser.next();
             if(parser.match(ELingTokenType.CLOSE_CBRACKET)) {
                 break;
             }
+            tokens.push(token);
+            token = parser.next();
             //console.log(ELingTokenType.getPrintTypeName(token.type));
-            this.returnType = new ArithmeticExpression();//this.returnType.push(token); //waiting arithmetic expression
         }
+        this.returnType = new ArithmeticExpression(tokens).parse();
         if(!parser.match(ELingTokenType.CLOSE_CBRACKET)) {
             parser.throwError(`Expected "}"`);
         }
@@ -86,15 +91,20 @@ export class LingFunctionExpression extends LingExpression {
 
     public parseArguments(parser: LingParser): void {
         while(parser.currentToken && parser.currentToken.type != ELingTokenType.CLOSE_RBRACKET) {
+
             if(parser.currentToken.type == ELingTokenType.IDENTIFIER) {
                 let value = null;
-                let skip = 1;
-                if(parser.match(ELingTokenType.IDENTIFIER) && parser.match(ELingTokenType.EQUAL, 1)) {
-                    value = parser.peek(2).keyword; //need do parse expressions
-                    skip = 3;
+                const argName = parser.currentToken.keyword;
+                parser.next(1);
+
+                if(parser.match(ELingTokenType.EQUAL)) {
+                    let tokens = [];
+                    do {
+                        tokens.push(parser.next());
+                    } while (parser.currentToken != null && (!parser.match(ELingTokenType.COMMA) && !parser.match(ELingTokenType.CLOSE_RBRACKET)));
+                    value = new ArithmeticExpression(tokens).parse();
                 }
-                this.args[parser.currentToken.keyword] = { type: parser.currentToken.type, value: value };
-                parser.next(skip);
+                this.args[argName] = value;
             }
             if(parser.currentToken.type == ELingTokenType.COMMA) {
                 parser.next();
@@ -140,8 +150,14 @@ export class LingFunctionExpression extends LingExpression {
         }
     }
 
-    public call(args?: LingFunctionArgumentType[]): ReturnType<IJSLingFunction> {
-        return this.returnType.calculate(args);
+    public call(args?: LingFunctionArgumentType[]): LingFunctionReturnTypes {
+        const argsKeys = Object.keys(this.args);
+        const namedArgs = args.reduce((pV, cV, cI) => {
+            pV[argsKeys[cI]] = cV;
+            return pV;
+        }, {});
+
+        return new ExpressionExecutor(this.returnType, namedArgs).calculate();
     }
 
     public static find(parser: LingParser): boolean {

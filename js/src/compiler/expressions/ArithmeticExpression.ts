@@ -18,15 +18,113 @@ export type ExpressionValue =
     | { type: "package"; name: string }
     | IBinaryOperationNode; 
 
-export class ArithmeticExpression implements IProcessingExpression {
-    public parse(parser: LingParser) {
-        //final boss
+export class ArithmeticExpression {
+    private pos = 0;
+    
+    constructor(private tokens: LingToken[]) {}
+    
+    private current(): LingToken | null {
+        return this.pos < this.tokens.length ? this.tokens[this.pos] : null;
     }
+    
+    private consume(type?: ELingTokenType): LingToken {
+        const token = this.current();
+        if(!token) {
+            throw new Error("Unexpected end of expression");
+        }
+        if(type && token.type != type) {
+            throw new Error(`Expected ${type}, got ${token.type}`);
+        }
+        this.pos++;
+        return token;
+    }
+    
+    public parse(): ExpressionValue {
+        let left = this.parseTerm();
+        
+        while(true) {
+            const op = this.current();
+            if(op?.type === ELingTokenType.PLUS || op?.type === ELingTokenType.MINUS) {
+                this.consume();
+                const right = this.parseTerm();
+                left = {
+                    type: "binary",
+                    left,  
+                    right,
+                    operation: op.type
+                } as IBinaryOperationNode; 
+            } else {
+                break;
+            }
+        }
+        
+        return left;
+    }
+    
+    private parseTerm(): ExpressionValue {
+        let left = this.parseFactor();
+        
+        while(true) {
+            const op = this.current();
+            if(op?.type == ELingTokenType.ASTERISK || op?.type == ELingTokenType.SLASH) {
+                this.consume();
+                const right = this.parseFactor();
+                left = {
+                    type: "binary",
+                    left,
+                    right,
+                    operation: op.type
+                } as IBinaryOperationNode;
+            } else {
+                break;
+            }
+        }
+        return left;
+    }
+    
+    private parseFactor(): ExpressionValue {
+        const token = this.current();
+        if(!token) {
+            throw new Error("Unexpected end of expression");
+        }
+        
+        switch(token.type) {
+            case ELingTokenType.NUMBER: {
+                this.consume();
+                return { type: "number", value: Number(token.keyword) };
+            }
 
-    public calculate<LingReturnType extends LingFunctionReturnTypes>(args?: LingFunctionArgumentType[]): LingReturnType {
-        throw "Not implemented"
+            case ELingTokenType.STRING: {
+                this.consume();
+                return { type: "string", value: token.keyword };
+            }
+
+            case ELingTokenType.IDENTIFIER: {
+                this.consume();
+                return { type: "argument", name: token.keyword };
+            }
+
+            case ELingTokenType.OPEN_RBRACKET: {
+                this.consume(ELingTokenType.OPEN_RBRACKET);
+                const expr = this.parse();
+                this.consume(ELingTokenType.CLOSE_RBRACKET);
+                return expr;
+            }
+
+            default: {
+                throw new Error(`Unexpected token in factor: ${token.type}`);
+            }
+        }
     }
 }
+
+// console.log(new ArithmeticExpression([
+// new LingToken(1, 1, ELingTokenType.NUMBER, "2"),
+// new LingToken(1, 1, ELingTokenType.PLUS),
+// new LingToken(1, 1, ELingTokenType.NUMBER, "3"),
+// new LingToken(1, 1, ELingTokenType.ASTERISK),
+// new LingToken(1, 1, ELingTokenType.NUMBER, "4")
+// ]).parse())
 
 const lA: LingLexicalAnalyzer = new LingLexicalAnalyzer(`
 package funcs {
