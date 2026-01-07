@@ -19,7 +19,7 @@ package hello {
     tocheck(a, b, c) {
         "a ${1}"
     }
-    tocheck:ru-RU(a, b, c) {
+    tocheck:ru-RU(a, b, c, d) {
         "a ${2}"
     }
     tocheck:en-US(a) {
@@ -29,11 +29,15 @@ package hello {
 
 package howdy {
     package man {
+        define langs = fr-FR
         package "and" {
-            b() {
+            b:fr-FR() {
                 "random"
             }
         }
+    }
+    test:en-US() {
+        "en"
     }
 }
 

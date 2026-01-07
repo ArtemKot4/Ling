@@ -1,42 +1,53 @@
 import { ELingTokenType } from "../ELingTokenType";
-import { ILingPackage, LingFunctionArgumentType, LingManager } from "../LingLocalization";
+import { LingManager } from "../../package_manager/LingManager";
 import { LingParser } from "../LingParser";
 import { StatementHelper } from "../StatementHelper";
 import { ArithmeticExpression, IBinaryOperationNode } from "./ArithmeticExpression";
 import ExpressionStatement from "./ExpressionStatement";
 import LingExpression from "./LingExpression";
 import { LingPackageExpression } from "./LingPackageExpression";
+import { LingFunctionReturnTypes, LingFunctionArgumentType } from "../../types";
+import { IProcessingExpression } from "./IProcessingExpression";
 
 export interface IArgumentDescription {
     type: ELingTokenType, value: string | IBinaryOperationNode
 }
 
 export interface ILingFunctionNode {
-    lang?: string;
     args: Record<string, IArgumentDescription>;
     returnType: ArithmeticExpression;
 }
 
-export interface IJSLingFunction<LingReturnType extends string | boolean = string> {
+export interface IJSLingFunction<LingReturnType extends LingFunctionReturnTypes = string> {
     (...args: unknown[]): LingReturnType
 }
 
 @ExpressionStatement
-export class LingFunction extends LingExpression {
+export class LingFunctionExpression extends LingExpression {
     public name: string;
     public lang!: string;
     public args: Record<string, IArgumentDescription> = {};
-    public returnType: ArithmeticExpression; 
+    public returnType: IProcessingExpression; 
+
+    public constructor(ast?: ILingFunctionNode) {
+        super();
+        if(ast != null) {
+            this.args = ast.args;
+            this.returnType = ast.returnType;
+        }
+    }
 
     public override parse(parser: LingParser, packageName: string = "common"): void {
         this.name = parser.currentToken.keyword;
 
         if(parser.match(ELingTokenType.COLON, 1)) {
             parser.next(2);
-            StatementHelper.Lang.satisfiesLanguageFormat(parser);
-            const lang = parser.slice(0, 3, (i, token) => token.keyword).join("-");
+            const lang = StatementHelper.Lang.buildLanguage(parser);
+            if(lang == null) {
+                parser.throwError(`Expected language for function overload of "${this.name}"`);
+            }
             this.lang = lang;
-            parser.next(4);
+            parser.next(1);
         } else {
             parser.next(2);
         }
@@ -103,8 +114,10 @@ export class LingFunction extends LingExpression {
 
         const lingFunctions = lingPackage.functions ??= {};
         const currentFunction = lingFunctions[this.lang || "default"] ??= {};
-        currentFunction[this.name] = this;
+        const name = this.name;
+        
         delete this.name, this.lang;
+        currentFunction[name] = this;
     }
 
     public checkSignature(parser: LingParser, packageName: string): void {
@@ -115,12 +128,11 @@ export class LingFunction extends LingExpression {
 
             if(args.length != defaultArgs.length) {
                 parser.throwWarning(`Not recommended to create function overloads of "${this.name}" for lang "${this.lang}" at pack "${packageName}" with signatures that differ from the default signature: ${
-                    "count of arguments " + (args < defaultArgs ? "smaller" : "bigger") + " than default" 
+                    "count of arguments " + (args.length < defaultArgs.length ? "smaller" : "bigger") + " than default" 
                 }`);
             }
         }
         if(this.lang != null && LingManager.hasLang(packageName, this.lang) == false) {
-            console.log(LingManager.getLangsFor(packageName));
             parser.throwError(`Cannot register function "${this.name}" for not defined lang "${this.lang}"`)
         }
         if(LingManager.hasFunction(packageName, this.name, this.lang) == true) {

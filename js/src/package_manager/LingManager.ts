@@ -1,42 +1,6 @@
-import { LingParser } from "./LingParser";
-import { ArithmeticExpression } from "./expressions/ArithmeticExpression";
-import { IJSLingFunction, LingFunction } from "./expressions/LingFunction";
-
-interface IPackageFunction<FunctionType extends IJSLingFunction | LingFunction = LingFunction> {
-    default?: FunctionType,
-    [lang: string]: FunctionType
-}
-
-export interface ILingPackage {
-    functions?: {
-        unexpected?: IPackageFunction,
-        [functionName: string]: IPackageFunction<IJSLingFunction | LingFunction>
-    },
-    translations: {
-        [lang: string]: {
-            [translationName: string]: string | ArithmeticExpression
-        }
-    }
-}
-
-export type LingFunctionArgumentType = string | boolean | number;
-export type LingFunctionReturnTypes = string | boolean | number;
-
-export function t(key: string): string {
-    const splited = key.split(".");
-    const translationKey = splited.pop();
-    const packageName = splited.join(".");
-
-    return LingManager.getTranslation(packageName, translationKey);
-}
-
-export function tcall(key: string, args: LingFunctionArgumentType[]): LingFunctionReturnTypes {
-    const splited = key.split(".");
-    const functionKey = splited.pop();
-    const packageName = splited.join(".");
-
-    return LingManager.callFunction(packageName, functionKey, args);
-}
+import { LingParser } from "../compiler/LingParser";
+import { IJSLingFunction, ILingFunctionNode, LingFunctionExpression } from "../compiler/expressions/LingFunctionExpression";
+import { ILingPackage, LingFunctionArgumentType } from "../types";
 
 export namespace LingManager {
     export const packages: Record<string, ILingPackage> = {};
@@ -74,16 +38,27 @@ export namespace LingManager {
     }
 
     export function callFunction(packageName: string, key: string, args: LingFunctionArgumentType[], lang: string = currentLang): LingFunctionArgumentType {
-        const lingFunctions = LingManager.getPackage(packageName)?.functions || {};
-        const lingFunction = lingFunctions?.[lang][key] || lingFunctions?.[lang]["default"];
-        
-        if(lingFunction == null) {
-            return "Unknown call: " + key;
-        } 
-        if(typeof lingFunction == "function") {
-            return lingFunction(...args);
+        try {
+            const lingPackage = LingManager.getPackage(packageName);
+            if(lingPackage == null) {
+                console.warn(`Unknown package "${packageName}"`);
+                return `Unknown package "${packageName}" for call "${key}"`;
+            }
+            const langFunctions = lingPackage.functions?.[lang];
+            const defaultFunctions = lingPackage.functions?.default;
+            const lingFunction = langFunctions?.[key] ?? defaultFunctions?.[key];
+            
+            if(lingFunction == null) {
+                console.warn(`Unknown lang "${lang}" for function call "${packageName}"`);
+                return "Unknown call: " + key;
+            } 
+            if(typeof lingFunction == "function") {
+                return lingFunction(...args);
+            }
+            return new LingFunctionExpression(lingFunction).call(args);
+        } catch (error) {
+            return error;
         }
-        return lingFunction.call(args);
     }
 
     export function getTranslation(packageName: string, key: string, lang: string = currentLang): string {
@@ -93,12 +68,12 @@ export namespace LingManager {
         if(lingPackage == null || translation == null) {
             const functions = findNearestPackBy(packageName, (lingPackage) => "unexpected" in lingPackage.functions)?.functions;
             const unexpected = functions.unexpected[lang] || functions.unexpected.default;
-            return unexpected != null ? unexpected.call([key]) : "Unknown key: " + key;
+            return unexpected != null ? new LingFunctionExpression(unexpected).call([key]) as string : "Unknown key: " + key;
         }
-        return (translation as ArithmeticExpression)?.calculate();
+        return translation; //будем вычислять выражения на этапе компиляции
     }
 
-    export function getFunction(packageName: string, functionName: string, lang: string): IJSLingFunction<string> | LingFunction {
+    export function getFunction(packageName: string, functionName: string, lang: string): IJSLingFunction<string> | ILingFunctionNode {
         return getPackage(packageName)?.functions?.[lang]?.[functionName];
     }
 
@@ -129,9 +104,8 @@ export namespace LingManager {
         if(lingPackage == null) {
             parser.throwError(`Cannot apply languages: " + langs + " for undefined package "${packageName}"`)
         }
-        for(const i in langs) {
-            //console.log(lang);
-            lingPackage.translations[langs[i]] ??= {};
+        for(const lang of langs) {
+            lingPackage.translations[lang] ??= {};
         }
     }
 
@@ -145,6 +119,5 @@ export namespace LingManager {
             delete lingPackage.translations[lang], lingPackage.functions?.[lang];
         }
     }
-
     createPackage("common");
 }

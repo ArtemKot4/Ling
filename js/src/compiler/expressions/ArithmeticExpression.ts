@@ -1,8 +1,9 @@
+import { LingFunctionReturnTypes, LingFunctionArgumentType } from "../../types";
 import { ELingTokenType } from "../ELingTokenType";
 import LingLexicalAnalyzer from "../LingLexicalAnalyzer";
-import { LingFunctionArgumentType, LingFunctionReturnTypes } from "../LingLocalization";
 import { LingParser } from "../LingParser";
 import { LingToken } from "../LingToken";
+import { IProcessingExpression } from "./IProcessingExpression";
 
 export interface IBinaryOperationNode {
     left: ExpressionValue;
@@ -17,7 +18,7 @@ export type ExpressionValue =
     | { type: "package"; name: string }
     | IBinaryOperationNode; 
 
-export class ArithmeticExpression {
+export class ArithmeticExpression implements IProcessingExpression {
     public parse(parser: LingParser) {
         //final boss
     }

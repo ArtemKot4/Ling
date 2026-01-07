@@ -1,10 +1,10 @@
 import { ELingTokenType } from "../ELingTokenType";
-import { LingManager } from "../LingLocalization";
+import { LingManager } from "../../package_manager/LingManager";
 import { LingParser } from "../LingParser";
 import { StatementHelper } from "../StatementHelper";
 import ExpressionStatement from "./ExpressionStatement";
 import LingExpression from "./LingExpression";
-import { ILingFunctionNode, LingFunction } from "./LingFunction";
+import { ILingFunctionNode, LingFunctionExpression } from "./LingFunctionExpression";
 import { LingPackageExpression } from "./LingPackageExpression";
 
 @ExpressionStatement
@@ -13,7 +13,7 @@ export class LingDefineExpression extends LingExpression {
     public packageName!: string;
     public mainPackage: string;
     public langs: string[] = [];
-    public unexpectedFunctions: LingFunction[] = [];
+    public unexpectedFunctions: LingFunctionExpression[] = [];
 
     public override parse(parser: LingParser, packageName: string = "common"): void {
         parser.next();
@@ -32,18 +32,19 @@ export class LingDefineExpression extends LingExpression {
     }
 
     public parseLangs(parser: LingParser): void {
-        while(StatementHelper.Lang.isValidLanguageFormat(parser)) {
-            const lang = parser.peek(0).keyword + "-" + parser.peek(2).keyword;
+        do {
+            if(parser.match(ELingTokenType.COMMA)) {
+                parser.next();
+            }
+            let lang = StatementHelper.Lang.buildLanguage(parser);
+            if(lang == null) {
+                break;
+            }
             if(this.langs.includes(lang)) {
                 parser.throwError(`Unexpected repeating of lang "${lang}"`);
             }
             this.langs.push(lang);
-            parser.next(3);
-            if(parser.match(ELingTokenType.COMMA)) {
-                parser.next();
-                continue;
-            }
-        }
+        } while (parser.match(ELingTokenType.COMMA));
     }
 
     public parseWithKey(parser: LingParser): void {
@@ -109,7 +110,7 @@ export class LingDefineExpression extends LingExpression {
     }
 
     public parseUnexpected(parser: LingParser): void {
-        const unexpected = new LingFunction();
+        const unexpected = new LingFunctionExpression();
         unexpected.parse(parser, this.packageName);
         this.unexpectedFunctions.push(unexpected);
     }

@@ -4,9 +4,9 @@ import { LingParser } from "./LingParser";
 import "./expressions/LingDefineExpression";
 import "./expressions/LingPackageExpression"; 
 import "./expressions/LingTranslationExpression";
-import "./expressions/LingFunction";
+import "./expressions/LingFunctionExpression";
 import { ELingTokenType } from "./ELingTokenType";
-import { LingManager } from "./LingLocalization";
+import { LingManager } from "../package_manager/LingManager";
 
 const text = require("fs").readFileSync("js/src/syntax_check.ling").toString()
 const l = new LingLexicalAnalyzer(text, "syntax_check.ling");

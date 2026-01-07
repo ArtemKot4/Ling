@@ -1,27 +1,33 @@
 import { ELingTokenType } from "./ELingTokenType";
 import { LingParser } from "./LingParser";
+import { LingToken } from "./LingToken";
 
 export namespace StatementHelper {
     export namespace Lang {
-        export function isValidLanguageFormat(parser: LingParser): boolean {
-            return (
-                parser.match(ELingTokenType.IDENTIFIER) && 
-                parser.match(ELingTokenType.MINUS, 1) && 
-                parser.match(ELingTokenType.IDENTIFIER, 2)
-            );
-        }
+        export function buildLanguage(parser: LingParser, stopPredicate?: () => boolean): string | null {
+            let language = "";
+            let token = parser.currentToken;
+            
+            if(token == null || token.type != ELingTokenType.IDENTIFIER) {
+                return null;
+            }
+            language += token.keyword;
+            token = parser.next();
+            
+            while(parser.match(ELingTokenType.MINUS)) {
+                language += "-";
+                token = parser.next();
+                if(!parser.match(ELingTokenType.IDENTIFIER)) {
+                    break;
+                }
+                language += token.keyword;
+                parser.next();
+            }
 
-        export function satisfiesLanguageFormat(parser: LingParser): boolean {
-            if(!parser.match(ELingTokenType.IDENTIFIER)) {
-                parser.throwError(`Expected identifier of language name like "en"`);
+            if(token == null) {
+                return null;
             }
-            if(!parser.match(ELingTokenType.MINUS, 1)) {
-                parser.throwError(`Expected enumeration operator '-' for language`);
-            }
-            if(!parser.match(ELingTokenType.IDENTIFIER, 2)) {
-                parser.throwError(`Expected two part of identifier of language like "US"`);
-            }
-            return true;
+            return language;
         }
     }
 

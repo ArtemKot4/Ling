@@ -2,7 +2,7 @@ import { ELingTokenType } from "./ELingTokenType";
 import LingLexicalAnalyzer from "./LingLexicalAnalyzer";
 import { LingToken } from "./LingToken";
 import LingExpression from "./expressions/LingExpression";
-import { LingFunction } from "./expressions/LingFunction";
+import { LingFunctionExpression } from "./expressions/LingFunctionExpression";
 import { ArithmeticExpression } from "./expressions/ArithmeticExpression";
 
 export class LingParser {

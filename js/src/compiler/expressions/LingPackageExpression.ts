@@ -1,17 +1,18 @@
 import { ELingTokenType } from "../ELingTokenType";
-import { ILingPackage, LingManager } from "../LingLocalization";
+import { LingManager } from "../../package_manager/LingManager";
 import { LingParser } from "../LingParser";
 import { StatementHelper } from "../StatementHelper";
 import { ArithmeticExpression } from "./ArithmeticExpression";
 import ExpressionStatement from "./ExpressionStatement";
 import { LingDefineExpression } from "./LingDefineExpression";
 import LingExpression from "./LingExpression";
-import { LingFunction } from "./LingFunction";
+import { LingFunctionExpression } from "./LingFunctionExpression";
+import { ILingPackage } from "../../types";
 
 @ExpressionStatement
 export class LingPackageExpression extends LingExpression {
     public mainExpression: LingPackageExpression;
-    public functions: Record<string, { [lang: string]: LingFunction }> = {};
+    public functions: Record<string, { [lang: string]: LingFunctionExpression }> = {};
     public translations: {
         [lang: string]: {
             [translationName: string]: string | ArithmeticExpression
@@ -34,7 +35,7 @@ export class LingPackageExpression extends LingExpression {
             parser.throwError(`Package "${this.name}" is empty`);
         }
         parser.next();
-        this.langs = this.mainExpression.langs || LingManager.getLangsFor("common");
+        this.langs ??= this.mainExpression.langs || LingManager.getLangsFor("common");
         this.parseBlockStatement(parser);
         this.mainExpression.packageExpressions.push(this);
     }
@@ -43,17 +44,7 @@ export class LingPackageExpression extends LingExpression {
         for(const expression of this.packageExpressions) {
             LingManager.createPackage(expression.name);
             LingManager.applyLangs(parser, expression.name, expression.langs);
-            this.applyFunctions(expression.getPackage(), expression, parser);
-        }
-    }
-
-    public applyFunctions(lingPackage: ILingPackage, expression: LingPackageExpression, parser: LingParser): void {
-        for(const expressionFunctionName in expression.functions) {
-            const expressionFunction = expression.functions[expressionFunctionName];
-
-            for(const lang in expressionFunction) {
-                expressionFunction[lang].apply(parser, expression.name);
-            }
+            LingPackageExpression.applyFunctions(expression.getPackage(), expression, parser);
         }
     }
 
@@ -66,17 +57,18 @@ export class LingPackageExpression extends LingExpression {
                 parser.next();
                 return;
             }
-            if(parser.match(ELingTokenType.PACKAGE)) {
-                const nestedPackage = new LingPackageExpression();
-                nestedPackage.name = `${this.name}.${parser.peek(1).keyword}`;
-                nestedPackage.mainExpression = this.mainExpression;
-                nestedPackage.parse(parser);
-                continue;
-            }
             if(parser.match(ELingTokenType.DEFINE)) {
                 const define = new LingDefineExpression();
                 define.parse(parser, this.name);
                 this.langs = define.langs;
+                continue;
+            }
+            if(parser.match(ELingTokenType.PACKAGE)) {
+                const nestedPackage = new LingPackageExpression();
+                nestedPackage.name = `${this.name}.${parser.peek(1).keyword}`;
+                nestedPackage.mainExpression = this.mainExpression;
+                nestedPackage.langs = this.langs;
+                nestedPackage.parse(parser);
                 continue;
             }
             if(StatementHelper.isFunction(parser)) {
@@ -93,7 +85,7 @@ export class LingPackageExpression extends LingExpression {
 
     public parseFunction(parser: LingParser): void {
         const currentFunctionName = parser.peek(0).keyword;
-        const currentFunction = new LingFunction();
+        const currentFunction = new LingFunctionExpression();
         currentFunction.parse(parser, this.name);
         const lingFunctionObject = this.functions[currentFunctionName] ??= {};
 
@@ -106,6 +98,16 @@ export class LingPackageExpression extends LingExpression {
 
     public getFunction(name: string, lang: string) {
         return this.functions?.[name]?.[lang];
+    }
+
+    public static applyFunctions(lingPackage: ILingPackage, expression: LingPackageExpression, parser: LingParser): void {
+        for(const expressionFunctionName in expression.functions) {
+            const expressionFunction = expression.functions[expressionFunctionName];
+
+            for(const lang in expressionFunction) {
+                expressionFunction[lang].apply(parser, expression.name);
+            }
+        }
     }
 
     public static find(parser: LingParser): boolean {
