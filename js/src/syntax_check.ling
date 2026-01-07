@@ -1,10 +1,10 @@
 define { 
     langs = en-US, ru-RU
     encoding = "utf-8"
-    unexpected:ru-RU(key = 10 + 5) {
+    unexpected(key = 10 + 5) {
         "undefined key ${key}" 
     }
-    unexpected(key) {
+    unexpected:ru-RU(key) {
         "неизвестный ключ ${key}"
     }
 }

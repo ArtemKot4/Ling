@@ -5,9 +5,7 @@ import { StatementHelper } from "../StatementHelper";
 import { ArithmeticExpression, ExpressionValue, IBinaryOperationNode } from "./ArithmeticExpression";
 import ExpressionStatement from "./ExpressionStatement";
 import LingExpression from "./LingExpression";
-import { LingPackageExpression } from "./LingPackageExpression";
 import { LingFunctionReturnTypes, LingFunctionArgumentType } from "../../types";
-import { IProcessingExpression } from "./IProcessingExpression";
 import { ExpressionExecutor } from "../../runtime/ExpressionExecutor";
 
 export interface IArgumentDescription {
@@ -40,21 +38,17 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
 
     public override parse(parser: LingParser, packageName: string = "common"): void {
         this.name = parser.currentToken.keyword;
+        parser.next(); //name
 
-        if(parser.match(ELingTokenType.COLON, 1)) {
-            parser.next(2);
+        if(parser.match(ELingTokenType.COLON)) {
+            parser.next(1); //:
             const lang = StatementHelper.Lang.buildLanguage(parser);
             if(lang == null) {
                 parser.throwError(`Expected language for function overload of "${this.name}"`);
             }
             this.lang = lang;
-            parser.next(1);
-        } else {
-            parser.next(2);
         }
         this.parseArguments(parser);
-
-        parser.next();
         if(!parser.match(ELingTokenType.OPEN_CBRACKET)) {
             parser.throwError(`Expected "{"`);
         }
@@ -89,30 +83,43 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
         }
     }
 
-    public parseArguments(parser: LingParser): void {
-        while(parser.currentToken && parser.currentToken.type != ELingTokenType.CLOSE_RBRACKET) {
+    public buildArgumentValue(parser: LingParser): ExpressionValue | null {
+        let tokens = [];
+        do {
+            tokens.push(parser.next());
+        } while (parser.currentToken != null && (!parser.match(ELingTokenType.COMMA) && !parser.match(ELingTokenType.CLOSE_RBRACKET)));
+        return new ArithmeticExpression(tokens).parse();
+    }
 
+    public parseArguments(parser: LingParser): void {
+        if(!parser.match(ELingTokenType.OPEN_RBRACKET)) {
+            parser.throwError(`Expected "("`);
+        }
+        parser.next(1) //(
+        while(true) {
             if(parser.currentToken.type == ELingTokenType.IDENTIFIER) {
                 let value = null;
                 const argName = parser.currentToken.keyword;
                 parser.next(1);
 
                 if(parser.match(ELingTokenType.EQUAL)) {
-                    let tokens = [];
-                    do {
-                        tokens.push(parser.next());
-                    } while (parser.currentToken != null && (!parser.match(ELingTokenType.COMMA) && !parser.match(ELingTokenType.CLOSE_RBRACKET)));
-                    value = new ArithmeticExpression(tokens).parse();
+                    value = this.buildArgumentValue(parser);
                 }
                 this.args[argName] = value;
             }
             if(parser.currentToken.type == ELingTokenType.COMMA) {
-                parser.next();
+                parser.next(); //,
+            }
+            else if(parser.currentToken.type == ELingTokenType.CLOSE_RBRACKET) {
+                break;
+            } else {
+                parser.throwError(`Unexpected "${parser.currentToken.keyword}"`)
             }
         }
         if(!parser.match(ELingTokenType.CLOSE_RBRACKET)) {
             parser.throwError(`Expected ")"`);
         } 
+        parser.next(); //)
     }
 
     public override apply(parser: LingParser, packageName: string = "common"): void {

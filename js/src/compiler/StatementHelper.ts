@@ -4,7 +4,7 @@ import { LingToken } from "./LingToken";
 
 export namespace StatementHelper {
     export namespace Lang {
-        export function buildLanguage(parser: LingParser, stopPredicate?: () => boolean): string | null {
+        export function buildLanguage(parser: LingParser): string | null {
             let language = "";
             let token = parser.currentToken;
             
@@ -13,7 +13,7 @@ export namespace StatementHelper {
             }
             language += token.keyword;
             token = parser.next();
-            
+
             while(parser.match(ELingTokenType.MINUS)) {
                 language += "-";
                 token = parser.next();
@@ -34,7 +34,7 @@ export namespace StatementHelper {
     export function isFunction(parser: LingParser): boolean {
         return parser.match(ELingTokenType.IDENTIFIER) && (
             parser.match(ELingTokenType.OPEN_RBRACKET,1) || 
-            parser.match(ELingTokenType.OPEN_RBRACKET, 5)
+            parser.match(ELingTokenType.COLON, 1)
         )
     }
 }
