@@ -7,7 +7,7 @@ export default function ExpressionStatement<T extends new (...args: any[]) => Li
         throw `Ling ExpressionDecorator: expression class "${target.name}" can't haven't static function "find"`;
     }
     if(!(target.prototype as LingExpression).apply) {
-        console.warn(`Ling ExpressionDecorator: expression class "${target.name}" should have function "apply"`)
+        throw `Ling ExpressionDecorator: expression class "${target.name}" must have function "apply"`;
     }
     LingParser.expressions.push([(target as typeof LingExpression).find, target as any]);
     return target;

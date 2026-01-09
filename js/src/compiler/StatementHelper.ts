@@ -41,16 +41,29 @@ export namespace StatementHelper {
 
     export function isTranslation(parser: LingParser): boolean {
         return (parser.match(ELingTokenType.IDENTIFIER) || parser.match(ELingTokenType.STRING)) && (
-            parser.match(ELingTokenType.EQUAL, 1) || parser.match(ELingTokenType.EQUAL, 2)
+            parser.match(ELingTokenType.EQUAL, 1) || (
+                parser.match(ELingTokenType.QUESTION, 1) && 
+                parser.match(ELingTokenType.EQUAL, 2)
+            )
         )
     }
 
-    export function isValue(parser: LingParser, index: number = 0): boolean {
+    export function isValue(tokenType: ELingTokenType): boolean {
         return (
-            parser.match(ELingTokenType.IDENTIFIER, index) ||
-            parser.match(ELingTokenType.STRING, index) ||
-            parser.match(ELingTokenType.NUMBER, index)
+            tokenType == ELingTokenType.IDENTIFIER ||
+            tokenType == ELingTokenType.STRING ||
+            tokenType == ELingTokenType.NUMBER
         );
+    }
+
+    const keywords: Set<ELingTokenType> = new Set([
+        ELingTokenType.DEFINE,
+        ELingTokenType.PACKAGE,
+        ELingTokenType.OVERRIDE
+    ]);
+    
+    export function isKeyword(tokenType: ELingTokenType): boolean {
+        return keywords.has(tokenType);
     }
 
     export function getPackageAndKeyName(name: string): [packageName: string, keyName: string] {
@@ -60,6 +73,6 @@ export namespace StatementHelper {
         if(splited.length > 1) {
             keyName = splited.pop(), packageName = splited.join(".");
         }
-        return [packageName || "common", keyName];
+        return [packageName, keyName || name];
     }
 }

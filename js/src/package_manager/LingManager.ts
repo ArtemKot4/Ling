@@ -27,6 +27,10 @@ export namespace LingManager {
         return packages[packageName];
     }
 
+    export function hasPackage(packageName: string): boolean {
+        return packageName in packages;
+    }
+
     export function getCommonPackage(): ILingPackage {
         return packages["common"]
     }

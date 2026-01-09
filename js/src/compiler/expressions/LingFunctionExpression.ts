@@ -54,7 +54,7 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
             parser.next(1); //:
             const lang = StatementHelper.Lang.buildLanguage(parser);
             if(lang == null) {
-                parser.throwError(`Expected language for function overload of "${this.name}"`);
+                parser.throwError(`Expected language for function overload of "${this.name}" at package "${this.packageName}"`);
             }
             this.lang = lang;
         }
@@ -63,14 +63,14 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
             parser.throwError(`Expected "{"`);
         }
         if(parser.match(ELingTokenType.CLOSE_CBRACKET, 1)) {
-            parser.throwError(`Function "${this.name}" must return expression`);
+            parser.throwError(`Function "${this.name}" at package "${this.packageName}" must return expression`);
         }
         this.parseBody(parser);       
         parser.next();
     }
 
-    public override apply(parser: LingParser, packageName: string = "common"): void {
-        const lingPackage = LingManager.getPackage(this.packageName || packageName);
+    public override apply(parser: LingParser): void {
+        const lingPackage = LingManager.getPackage(this.packageName);
         if(lingPackage == null) {
             parser.throwError(`Cannot create function for undefined package "${this.packageName}"`)
         }

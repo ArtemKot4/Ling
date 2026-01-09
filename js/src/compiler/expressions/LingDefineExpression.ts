@@ -28,7 +28,7 @@ export class LingDefineExpression extends LingExpression {
 
     public apply(parser: LingParser): void {
         LingManager.applyLangs(parser, this.packageName, this.langs);
-        this.unexpectedFunctions.forEach(unexpected => unexpected.apply(parser, this.packageName));
+        this.unexpectedFunctions.forEach(unexpected => unexpected.apply(parser));
     }
 
     public parseLangs(parser: LingParser): void {

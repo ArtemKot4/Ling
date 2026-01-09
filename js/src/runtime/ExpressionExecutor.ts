@@ -8,6 +8,6 @@ export class ExpressionExecutor {
     }
 
     public calculate(): LingFunctionReturnTypes {
-        throw "Not implemented";
+        return JSON.stringify(this.ast); //will be implemented;
     }
 }

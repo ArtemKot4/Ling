@@ -1,5 +1,5 @@
 define { 
-    langs = en-US, ru-RU
+    langs = en-US, ru-RU, fr-FR, en-UK
     encoding = "utf-8"
     unexpected(key = 10 + 5) {
         "undefined key ${key}" 
@@ -9,7 +9,6 @@ define {
     }
 }
 
-//aboba? = "hello"
 /*
 package help {
     a(){"A"}
@@ -23,6 +22,7 @@ help.maintrying(a, b, c) {
 //define langs = ru-RU
 
 package hello {
+    hello? = "hello!"
     tocheck(a) {
         "a ${1}"
     }
