@@ -18,11 +18,11 @@ export type ExpressionValue =
     | { type: "package"; name: string }
     | IBinaryOperationNode; 
 
-export class ArithmeticExpression {
+export class ExpressionParser {
     private pos = 0;
     
-    constructor(private tokens: LingToken[]) {}
-    
+    public constructor(private tokens: LingToken[]) {}
+
     private current(): LingToken | null {
         return this.pos < this.tokens.length ? this.tokens[this.pos] : null;
     }

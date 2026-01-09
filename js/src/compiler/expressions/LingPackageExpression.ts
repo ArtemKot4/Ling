@@ -2,7 +2,7 @@ import { ELingTokenType } from "../ELingTokenType";
 import { LingManager } from "../../package_manager/LingManager";
 import { LingParser } from "../LingParser";
 import { StatementHelper } from "../StatementHelper";
-import { ArithmeticExpression } from "./ArithmeticExpression";
+import { ExpressionParser, ExpressionValue } from "./ExpressionParser";
 import ExpressionStatement from "./ExpressionStatement";
 import { LingDefineExpression } from "./LingDefineExpression";
 import LingExpression from "./LingExpression";
@@ -12,10 +12,10 @@ import { ILingPackage } from "../../types";
 @ExpressionStatement
 export class LingPackageExpression extends LingExpression {
     public mainExpression: LingPackageExpression;
-    public functions: Record<string, { [lang: string]: LingFunctionExpression }> = {};
+    public functions: LingFunctionExpression[] = [];
     public translations: {
         [lang: string]: {
-            [translationName: string]: string | ArithmeticExpression
+            [translationName: string]: string | ExpressionValue
         }
     }
     public langs: string[];
@@ -84,12 +84,9 @@ export class LingPackageExpression extends LingExpression {
     }
 
     public parseFunction(parser: LingParser): void {
-        const currentFunctionName = parser.peek(0).keyword;
         const currentFunction = new LingFunctionExpression();
         currentFunction.parse(parser, this.name);
-        const lingFunctionObject = this.functions[currentFunctionName] ??= {};
-
-        lingFunctionObject[currentFunction.lang ?? "default"] = currentFunction;
+        this.functions.push(currentFunction);
     }
 
     public getPackage(): ILingPackage {
@@ -101,12 +98,8 @@ export class LingPackageExpression extends LingExpression {
     }
 
     public static applyFunctions(lingPackage: ILingPackage, expression: LingPackageExpression, parser: LingParser): void {
-        for(const expressionFunctionName in expression.functions) {
-            const expressionFunction = expression.functions[expressionFunctionName];
-
-            for(const lang in expressionFunction) {
-                expressionFunction[lang].apply(parser, expression.name);
-            }
+        for(const lingFunction of expression.functions) {
+            lingFunction.apply(parser, expression.name);
         }
     }
 

@@ -9,21 +9,31 @@ define {
     }
 }
 
-maintrying(a, b, c) {
+//aboba? = "hello"
+/*
+package help {
+    a(){"A"}
+}
+
+help.maintrying(a, b, c) {
     "hello!"
 }
+*/
 
 //define langs = ru-RU
 
 package hello {
-    tocheck(a, b, c) {
+    tocheck(a) {
         "a ${1}"
     }
-    tocheck:ru-RU(a, b, c, d) {
+    tocheck:ru-RU(a) {
         "a ${2}"
     }
     tocheck:en-US(a) {
         "s"
+    }
+    override tocheck:en-US(a, b) {
+        "aboba"
     }
 }
 

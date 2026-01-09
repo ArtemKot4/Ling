@@ -3,7 +3,7 @@ import LingLexicalAnalyzer from "./LingLexicalAnalyzer";
 import { LingToken } from "./LingToken";
 import LingExpression from "./expressions/LingExpression";
 import { LingFunctionExpression } from "./expressions/LingFunctionExpression";
-import { ArithmeticExpression } from "./expressions/ArithmeticExpression";
+import { ExpressionParser } from "./expressions/ExpressionParser";
 
 export class LingParser {
     public static expressions: [typeof LingExpression.find, new (...args: any[]) => LingExpression][] = []
@@ -38,8 +38,8 @@ export class LingParser {
         return token != null && token.type == type;
     }
 
-    public expect(type: ELingTokenType, error?: string, position: number = 1): LingToken {
-        const token = this.next(position);
+    public expect(type: ELingTokenType, error?: string, index: number = 1): LingToken {
+        const token = this.next(index);
         if(token.type != type) {
             this.throwError(error || "Expected another type");
         }

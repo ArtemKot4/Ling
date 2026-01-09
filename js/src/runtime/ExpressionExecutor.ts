@@ -1,4 +1,4 @@
-import { ExpressionValue } from "../compiler/expressions/ArithmeticExpression";
+import { ExpressionValue } from "../compiler/expressions/ExpressionParser";
 import { IProcessingExpression } from "../compiler/expressions/IProcessingExpression";
 import { LingFunctionArgumentType, LingFunctionReturnTypes } from "../types";
 

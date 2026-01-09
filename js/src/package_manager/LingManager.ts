@@ -68,13 +68,13 @@ export namespace LingManager {
         if(lingPackage == null || translation == null) {
             const functions = findNearestPackBy(packageName, (lingPackage) => "unexpected" in lingPackage.functions)?.functions;
             const unexpected = functions.unexpected[lang] || functions.unexpected.default;
-            return unexpected != null ? new LingFunctionExpression(unexpected).call([key]) as string : "Unknown key: " + key;
+            return unexpected != null ? new LingFunctionExpression(unexpected as ILingFunctionNode).call([key]) as string : "Unknown key: " + key;
         }
         return translation; //будем вычислять выражения на этапе компиляции
     }
 
-    export function getFunction(packageName: string, functionName: string, lang: string): IJSLingFunction<string> | ILingFunctionNode {
-        return getPackage(packageName)?.functions?.[lang]?.[functionName];
+    export function getFunction<FunctionFormat extends ILingFunctionNode | IJSLingFunction = ILingFunctionNode>(packageName: string, functionName: string, lang: string = "default"): FunctionFormat {
+        return getPackage(packageName)?.functions?.[lang]?.[functionName] as FunctionFormat;
     }
 
     export function hasFunction(packageName: string, functionName: string, lang: string): boolean {
@@ -92,9 +92,6 @@ export namespace LingManager {
 
     export function hasLang(packageName: string, lang: string): boolean {
         const lingPackage = LingManager.getPackage(packageName);
-        if(lingPackage == null) {
-            console.log("debug: package " + packageName + " not defined")
-        }
         return lang in (lingPackage.translations || LingManager.getCommonPackage().translations);
     }
 

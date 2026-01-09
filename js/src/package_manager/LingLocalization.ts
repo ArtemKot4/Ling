@@ -1,5 +1,5 @@
 import { LingParser } from "../compiler/LingParser";
-import { ArithmeticExpression } from "../compiler/expressions/ArithmeticExpression";
+import { ExpressionParser } from "../compiler/expressions/ExpressionParser";
 import { IJSLingFunction, ILingFunctionNode } from "../compiler/expressions/LingFunctionExpression";
 import { LingFunctionArgumentType, LingFunctionReturnTypes } from "../types";
 import { LingManager } from "./LingManager";

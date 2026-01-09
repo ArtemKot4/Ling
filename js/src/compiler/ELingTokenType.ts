@@ -120,7 +120,11 @@ export enum ELingTokenType {
     /**
      * `in`
      */
-    IN
+    IN,
+    /**
+     * `override`
+     */
+    OVERRIDE
 }
 
 export namespace ELingTokenType {
@@ -156,7 +160,8 @@ export namespace ELingTokenType {
         "and": ELingTokenType.AND,
         "or": ELingTokenType.OR,
         "not": ELingTokenType.NOT,
-        "in": ELingTokenType.IN
+        "in": ELingTokenType.IN,
+        "override": ELingTokenType.OVERRIDE
     };
 
     export function isOperator(text: string): boolean {
