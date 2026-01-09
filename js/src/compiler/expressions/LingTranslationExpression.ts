@@ -29,7 +29,7 @@ export class LingTranslationExpression extends LingExpression {
             parser.next(); //?
         }
         if(!parser.match(ELingTokenType.EQUAL)) {
-            parser.throwError(`Expected assignment operator "=" for translation "${this.name}" at pack "${this.packageName}"`);
+            parser.throwError(`Expected assignment operator "=" for translation "${this.name}" at package "${this.packageName}"`);
         }
         parser.next(); //=
         this.expressions = [this.buildExpression(parser)];
@@ -64,9 +64,9 @@ export class LingTranslationExpression extends LingExpression {
             }
             languages = languages.slice(0, -2);
             if(this.nullable == null && languages.length > 0) {
-                parser.throwError(`Expected translations for langs ${languages} by translation "${this.name}" at pack "${this.packageName}"`);
+                parser.throwError(`Expected translations for langs ${languages} by translation "${this.name}" at package "${this.packageName}"`);
             }
-            parser.throwWarning(`Nullable values for langs ${languages} by translation "${this.name}" at pack "${this.packageName}" not recommended`)
+            parser.throwWarning(`Nullable values for langs ${languages} by translation "${this.name}" at package "${this.packageName}" not recommended`)
         }
     } 
 

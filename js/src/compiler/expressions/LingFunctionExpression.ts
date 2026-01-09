@@ -150,7 +150,7 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
             const args = Object.keys(this.args);
 
             if(args.length != defaultArgs.length) {
-                parser.throwWarning(`Not recommended to create function overloads of "${this.name}" for lang "${this.lang}" at pack "${this.packageName}" with signatures that differ from the default signature: ${
+                parser.throwWarning(`Not recommended to create function overloads of "${this.name}" for lang "${this.lang}" at package "${this.packageName}" with signatures that differ from the default signature: ${
                     "count of arguments " + (args.length < defaultArgs.length ? "smaller" : "bigger") + " than default" 
                 }`);
             }

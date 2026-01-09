@@ -22,7 +22,7 @@ help.maintrying(a, b, c) {
 //define langs = ru-RU
 
 package hello {
-    hello? = "hello!"
+    hello? = "hello!" * 2 + 100500
     tocheck(a) {
         "a ${1}"
     }
