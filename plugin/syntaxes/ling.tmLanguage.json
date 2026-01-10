@@ -201,7 +201,7 @@
 				},
 				{
 					"name": "keyword.operator.word.ling",
-					"match": "\\b(and|or|not|in|override)\\b"
+					"match": "\\b(and|or|not|in|override|runtime)\\b"
 				},
 				{
 					"name": "constant.numeric.ling",

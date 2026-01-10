@@ -119,8 +119,11 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
         parser.next(1) //(
         while(true) {
             if(parser.currentToken.type == ELingTokenType.IDENTIFIER) {
-                let value = null;
                 const argName = parser.currentToken.keyword;
+                if(argName in this.args) {
+                    parser.throwError(`Cannot use repeating name "${argName}" for new argument in one function "${this.name}" at package "${this.packageName}"`);
+                }
+                let value = null;
                 parser.next(1);
 
                 if(parser.match(ELingTokenType.EQUAL)) {

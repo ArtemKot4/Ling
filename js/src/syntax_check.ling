@@ -32,7 +32,7 @@ package hello {
     tocheck:en-US(a) {
         "s"
     }
-    override tocheck:en-US(a, b) {
+    override tocheck:en-US(a, b, a) {
         "aboba"
     }
 }
