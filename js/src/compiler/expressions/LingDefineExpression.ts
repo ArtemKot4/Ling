@@ -23,7 +23,7 @@ export class LingDefineExpression extends LingExpression {
             this.parseWithKey(parser);
         } else if(parser.match(ELingTokenType.OPEN_CBRACKET)) {
             this.parseWithStatement(parser);
-        } else parser.throwError("Unexpected format for definitions");
+        } else parser.throwError({ message: "Unexpected format for definitions" });
     }
 
     public apply(parser: LingParser): void {
@@ -41,7 +41,7 @@ export class LingDefineExpression extends LingExpression {
                 break;
             }
             if(this.langs.includes(lang)) {
-                parser.throwError(`Unexpected repeating of lang "${lang}"`);
+                parser.throwError({ message: `Unexpected repeating of lang "${lang}"` });
             }
             this.langs.push(lang);
         } while (parser.match(ELingTokenType.COMMA));
@@ -61,13 +61,13 @@ export class LingDefineExpression extends LingExpression {
                 return;
             } 
             const validKeysEnumeration = LingDefineExpression.settingList.reduce((pV, cV, cI) => pV += cV + ", ", "").slice(0, -3);
-            parser.throwError(`Unexpected key "${id}". Are you mean something of ${validKeysEnumeration}?`)
+            parser.throwError({ message: `Unexpected key "${id}". Are you mean something of ${validKeysEnumeration}?` })
         } else {
             if(id != "unexpected") {
-                parser.throwError(`Expected unexpected function`)
+                parser.throwError({ message: `Expected unexpected function` })
             }
             if(!StatementHelper.isFunction(parser)) {
-                parser.throwError(`Expected function`);
+                parser.throwError({ message: `Expected function` });
             }
             this.parseUnexpected(parser);
         }
@@ -76,7 +76,7 @@ export class LingDefineExpression extends LingExpression {
     public parseWithStatement(parser: LingParser): void {
         parser.next();
         if(!parser.match(ELingTokenType.IDENTIFIER)) {
-            parser.throwError(`Unexpected "${parser.currentToken}"`);
+            parser.throwError({ message: `Unexpected "${parser.currentToken}"` });
         }
 
         while(true) {
@@ -90,14 +90,14 @@ export class LingDefineExpression extends LingExpression {
             if(parser.currentToken.keyword == "encoding") {
                 parser.next(2);
                 if(!parser.match(ELingTokenType.STRING)) {
-                    parser.throwError("Excepted string literal for encoding definition");
+                    parser.throwError({ message: "Excepted string literal for encoding definition" });
                 }
                 //this.applyEncoding(parser, parser.currentToken.keyword);
                 parser.next();
             }
             if(StatementHelper.isFunction(parser)) {
                 if(parser.currentToken.keyword != "unexpected") {
-                    parser.throwError(`Unexpected method expected, but got "${parser.currentToken.keyword}"`);
+                    parser.throwError({ message: `Unexpected method expected, but got "${parser.currentToken.keyword}"` });
                 } else {
                     this.parseUnexpected(parser);
                 }
@@ -105,7 +105,7 @@ export class LingDefineExpression extends LingExpression {
         }
         
         if(!parser.match(ELingTokenType.CLOSE_CBRACKET)) {
-            parser.throwError(`Expected closing bracket, but got "${parser.currentToken.keyword}"`);
+            parser.throwError({ message: `Expected closing bracket, but got "${parser.currentToken.keyword}"` });
         }
     }
 

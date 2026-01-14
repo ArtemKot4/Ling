@@ -16,6 +16,8 @@ export class LingTranslationExpression extends LingExpression {
     public expressions: ExpressionValue[];
 
     public override parse(parser: LingParser, packageName: string): void {
+        StatementHelper.applyModifiers(parser, this);
+
         if(parser.currentToken.keyword.includes(".")) {
             [this.packageName, this.name] = StatementHelper.getPackageAndKeyName(parser.currentToken.keyword);
         } else {
@@ -26,18 +28,18 @@ export class LingTranslationExpression extends LingExpression {
         
         if(parser.match(ELingTokenType.QUESTION)) {
             this.nullable = true;
-            parser.next(); //?
+            parser.next(); // ?
         }
         if(!parser.match(ELingTokenType.EQUAL)) {
-            parser.throwError(`Expected assignment operator "=" for translation "${this.name}" at package "${this.packageName}"`);
+            parser.throwError({ message: `Expected assignment operator "="` });
         }
-        parser.next(); //=
+        parser.next(); // =
         this.expressions = [this.buildExpression(parser)];
 
         while(parser.match(ELingTokenType.COMMA)) {
-            parser.next(); //,
+            parser.next(); // ,
             if(this.langs.length == this.expressions.length) {
-                parser.throwError(`Unexpected language for translation "${this.name}" and enumeration ${this.expressions.length + 1}`)
+                parser.throwError({ message: `Unexpected language for enumeration ${this.expressions.length + 1}` });
             }
             this.expressions.push(this.buildExpression(parser));
         }
@@ -47,10 +49,13 @@ export class LingTranslationExpression extends LingExpression {
     public override apply(parser: LingParser): void {
         const lingPackage = LingManager.getPackage(this.packageName);
         if(lingPackage == null) {
-            parser.throwError(`Unknown package "${this.packageName}" for translation "${this.name}"`)
+            parser.throwError({ message: `Unknown package "${this.packageName}" for translation "${this.name}" at package "${this.packageName}"` })
         }
         for(let i = 0; i < this.langs.length; i++) {
             const translations = lingPackage.translations[this.langs[i]] ??= {};
+            if(this.name in translations && this.override == null) {
+                parser.throwError({ message: `Unexpected repeating of translation "${this.name}" at package "${this.packageName}". You wanted to use override?` })
+            }
             translations[this.name] = String(new ExpressionExecutor(this.expressions[i], {}).calculate());
         }
     }
@@ -64,7 +69,7 @@ export class LingTranslationExpression extends LingExpression {
             }
             languages = languages.slice(0, -2);
             if(this.nullable == null && languages.length > 0) {
-                parser.throwError(`Expected translations for langs ${languages} by translation "${this.name}" at package "${this.packageName}"`);
+                parser.throwError({ message: `Expected translations for langs ${languages}` });
             }
             parser.throwWarning(`Nullable values for langs ${languages} by translation "${this.name}" at package "${this.packageName}" not recommended`)
         }
@@ -81,13 +86,12 @@ export class LingTranslationExpression extends LingExpression {
                 break;
             }
             if(
-                StatementHelper.isValue(parser.peek(0).type) && (StatementHelper.isValue(parser.peek(1).type) || StatementHelper.isKeyword(parser.peek(1).type))
+                StatementHelper.hasEndExpression(parser)
             ) {
-                tokens.push(parser.next());
+                parser.next()
                 break;
             }
-            const token = parser.next();
-            tokens.push(token);
+            tokens.push(parser.next());
         }
         return new ExpressionParser(tokens).parse();
     }

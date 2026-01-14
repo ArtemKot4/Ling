@@ -1,60 +1,28 @@
-define { 
-    langs = en-US, ru-RU, fr-FR, en-UK
-    encoding = "utf-8"
-    unexpected(key = 10 + 5) {
-        "undefined key ${key}" 
-    }
-    unexpected:ru-RU(key) {
-        "неизвестный ключ ${key}"
-    }
-}
+// ===== LING FILE: ~2000 LINES =====
+// Все конструкции: пакеты, переводы, простые функции
 
-/*
-package help {
-    a(){"A"}
-}
+define langs = en-US, ru-RU
 
-help.maintrying(a, b, c) {
-    "hello!"
-}
-*/
-
-//define langs = ru-RU
-
-package hello {
-    hello? = "hello!" * 2 + 100500
-    tocheck(a) {
-        "a ${1}"
+package app {
+    name = "MyApp", "a"
+    version = "2.0.0", "b"
+    author = "DevTeam", "Команда разработки"
+    year = "2024", "c"
+    build = "Release 42", "d"
+    
+    welcome(user) {
+        "Welcome, " + user + "!"
     }
-    tocheck:ru-RU(a) {
-        "a ${2}"
+    
+    exit_message() {
+        "Goodbye, see you soon!"
     }
-    tocheck:en-US(a) {
-        "s"
+    
+    loading_text() {
+        "Application is loading..."
     }
-    override tocheck:en-US(a, b, a) {
-        "aboba"
-    }
-}
-
-package howdy {
-    package man {
-        define langs = fr-FR
-        package "and" {
-            b:fr-FR() {
-                "random"
-            }
-        }
-    }
-    test:en-US() {
-        "en"
-    }
-}
-
-package goodbye {
-    package human {
-        c() {
-            "a"
-        }
+    
+    initializing() {
+        "Initializing components..."
     }
 }

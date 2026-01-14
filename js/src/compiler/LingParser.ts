@@ -4,6 +4,7 @@ import { LingToken } from "./LingToken";
 import LingExpression from "./expressions/LingExpression";
 import { LingFunctionExpression } from "./expressions/LingFunctionExpression";
 import { ExpressionParser } from "./expressions/ExpressionParser";
+import { LingError } from "./LingError";
 
 export class LingParser {
     public static expressions: [typeof LingExpression.find, new (...args: any[]) => LingExpression][] = []
@@ -16,8 +17,24 @@ export class LingParser {
         this.openedField = false;
     }
 
-    public throwError(text: string): void {
-        throw `Ling SyntaxError: ${text} on line ${this.currentToken.line} and position ${this.currentToken.column}${this.lexicalAnalyzer.fileName ? " at file: " + this.lexicalAnalyzer.fileName.split(".").slice(-2).join(".") : ""}`;
+    public throwError(description: {
+        message: string,
+        reason?: string, 
+        line?: number,
+        column?: number,
+        keyword?: string,
+        type?: ELingTokenType,
+        packageName?: string,
+        fileName?: string
+    }): void {
+        const token = this.currentToken || this.peek(1) || this.peek(-1);
+
+        description.column ??= token.column;
+        description.line ??= token.line;
+        description.keyword ??= token.keyword;
+        description.type ??= token.type;
+        description.fileName = this.lexicalAnalyzer.fileName;
+        new LingError("Ling SyntaxError", this.lexicalAnalyzer).throw(description);
     }
 
     public throwWarning(text: string): void {
@@ -30,7 +47,11 @@ export class LingParser {
     }
 
     public peek(index: number = 1): LingToken | null {
-        return this.lexicalAnalyzer.tokens[this.tokenIndex + index] || null;
+        return this.get(this.tokenIndex + index) || null;
+    }
+
+    public get(index: number): LingToken | null {
+        return this.lexicalAnalyzer.tokens[index] || null
     }
 
     public match(type: ELingTokenType, index: number = 0): boolean {
@@ -41,7 +62,7 @@ export class LingParser {
     public expect(type: ELingTokenType, error?: string, index: number = 1): LingToken {
         const token = this.next(index);
         if(token.type != type) {
-            this.throwError(error || "Expected another type");
+            this.throwError({ message: error || "Expected another type" });
         }
         return token;
     }
@@ -49,7 +70,7 @@ export class LingParser {
     public slice<T extends (index: number, token: LingToken) => unknown>(relativeFrom: number, relativeTo: number, addFormat?: T): ReturnType<T>[] {
         const list = [];
         if(this.peek(relativeFrom) == null || this.peek(relativeTo) == null) {
-            this.throwError("Token cannot be null by slice operation");
+            this.throwError({ message: "Token cannot be null by slice operation" });
         }
         for(let i = relativeFrom; i < relativeTo; i++) {
             const token = this.peek(i);

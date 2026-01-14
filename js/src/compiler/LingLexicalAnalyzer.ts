@@ -1,14 +1,18 @@
 import { ELingTokenType } from "./ELingTokenType";
+import { LingError } from "./LingError";
 import { LingToken } from "./LingToken";
 
 export default class LingLexicalAnalyzer {
+    public static VALID_WORD_REGEXP: RegExp = /^[a-zA-Z0-9_.]*$/;
     public static FLAGS_REGEXP: RegExp = /i|g|m|s|u|y|d/;
     public line: number = 0;
     public position: number = 0;
     public column: number = 0;
     public currentChar!: string;
-    public langs: string[] = [];
     public tokens: LingToken[] = [];
+
+    protected startColumn: number;
+    protected startLine: number;
     
     //string keys
     public hasOpenedStringExpression: boolean = false;
@@ -21,37 +25,59 @@ export default class LingLexicalAnalyzer {
         do { token = this.next(); } while(token != null);
     }
 
-    public newToken(type: ELingTokenType, keyword?: string): LingToken {
-        return new LingToken(this.line, this.column, type, keyword);
+    protected newToken(type: ELingTokenType, keyword?: string): LingToken {
+        return new LingToken(this.startLine, this.startColumn, type, keyword);
     }
 
-    public addToken(type: ELingTokenType, keyword?: string): LingToken {
+    protected addToken(type: ELingTokenType, keyword?: string): LingToken {
         const token = this.newToken(type, keyword);
         this.tokens.push(token);
         return token;
     }
 
-    public throwError(text: string): void {
-        throw `Ling ReferenceError: ${text} on line ${this.line} and position ${this.position}${this.fileName ? " at file: " + this.fileName.split(".").slice(-2).join(".") : ""}`;
+    public throwError(description: {
+        message: string,
+        reason?: string, 
+        line?: number,
+        column?: number,
+        keyword?: string,
+        type?: ELingTokenType,
+        packageName?: string,
+        fileName?: string
+    }): void {
+        description.column ??= this.column;
+        description.line ??= this.line;
+        description.fileName = this.fileName;
+        new LingError("Ling ReferenceError", this).throw(description);
     }
 
-    public isDigit(char: string): boolean {
+    protected isDigit(char: string): boolean {
         return char >= "0" && char <= "9";
     }
 
-    public tokenizeRegexp(): LingToken {
+    protected tokenizeRegexp(): LingToken {
         this.advance();
         let regexp = "";
         while(true) {
             if(this.currentChar == null) {
-                this.throwError("Unclosed regular expression");
+                this.throwError({ 
+                    message: "Unclosed regular expression", 
+                    column: this.startColumn, 
+                    line: this.startLine,
+                    keyword: regexp  
+                });
             }
             if(this.currentChar == "/") {
                 this.advance();
                 regexp += "|";
                 while(this.currentChar != null && !this.isWhitespace(this.currentChar)) {
                     if(!LingLexicalAnalyzer.FLAGS_REGEXP.test(this.currentChar)) {
-                        this.throwError(`Expected valid regular expression flag, not "${this.currentChar}"`)
+                        this.throwError({
+                            message: `Invalid regular expression`, 
+                            reason: `Expected valid regular flag, not "${this.currentChar}"`,
+                            keyword: regexp,
+                            column: this.startColumn
+                        });
                     }
                     regexp += this.currentChar;
                     this.advance();
@@ -64,13 +90,18 @@ export default class LingLexicalAnalyzer {
         return this.addToken(ELingTokenType.REGEXP, regexp);
     }
 
-    public tokenizeString(): LingToken {
+    protected tokenizeString(): LingToken {
         this.advance();
         let string = "";
         
         while(true) {
             if(this.currentChar == null) {
-                this.throwError(`Unclosed string`);
+                this.throwError({ 
+                    message: `Unclosed string`, 
+                    column: this.startColumn, 
+                    line: this.startLine,
+                    keyword: string 
+                });
             }
             if(this.hasOpenedStringExpression == false && this.peek(-1) != "\\" && this.currentChar == "$" && this.peek() == "{") {
                 this.hasOpenedStringExpression = true;
@@ -82,7 +113,7 @@ export default class LingLexicalAnalyzer {
                 while(true) {
                     if(this.currentChar == "}" as any) {
                         if(token == null) {
-                            this.throwError("Inside string expression cannot be empty");
+                            this.throwError({ message: "Inside string expression cannot be empty" });
                         }
                         this.hasOpenedStringExpression = false;
                         const closeToken = this.addToken(ELingTokenType.CLOSE_RBRACKET);
@@ -98,7 +129,7 @@ export default class LingLexicalAnalyzer {
                     token = this.next();
                     
                     if(token == null) {
-                        this.throwError("Unexpected end of inside string expression");
+                        this.throwError({ message: "Unexpected end of inside string expression" });
                     } 
                 }
             }
@@ -112,14 +143,14 @@ export default class LingLexicalAnalyzer {
         return this.addToken(ELingTokenType.STRING, string);
     }
 
-    public tokenizeNumber(): LingToken {
+    protected tokenizeNumber(): LingToken {
         let numberLiteral = "";
         let hasDot = false;
         
         while(this.currentChar && (this.isDigit(this.currentChar) || this.currentChar == "." || this.currentChar == "_")) {
             if(this.currentChar == ".") {
                 if(hasDot == true) {
-                    this.throwError("Expected one dot in number literal");
+                    this.throwError({ message: "Expected one dot in number literal" });
                 }
                 hasDot = true;
             }
@@ -132,36 +163,40 @@ export default class LingLexicalAnalyzer {
         return this.addToken(ELingTokenType.NUMBER, numberLiteral);
     }
 
-    public tokenizeOperator(): LingToken {
+    protected tokenizeOperator(): LingToken {
         const token = this.addToken(ELingTokenType.getOperatorToken(this.currentChar));
         this.advance();
         return token;
     }
 
-    public skipLine(): void {
+    protected skipLine(): void {
         while(this.currentChar != null && this.currentChar != "\n") {
             this.advance();
         }
         this.advance();
     }
 
-    public skipLongComment(): void {
+    protected skipLongComment(): void {
         while(this.currentChar != null && !(this.currentChar == "*" && this.peek() == "/")) {
             this.advance();
         }
         this.advance(2); // /*
     }
 
-    public isValidNumber(): boolean {
+    protected isValidNumber(): boolean {
         return this.isDigit(this.currentChar) || ((this.currentChar == "." || this.currentChar == "_") && this.isDigit(this.peek()));
     }
 
-    public next(): LingToken {
+    protected next(): LingToken {
         this.skipWhitespace();
 
         if(!this.currentChar) {
             return null;
         }
+
+        this.startColumn = this.column; 
+        this.startLine = this.line;
+
         if(this.currentChar == "/") {
             if(this.isLineComment()) {
                 this.skipLine();
@@ -194,15 +229,15 @@ export default class LingLexicalAnalyzer {
         }
     }
 
-    public tokenizeIdentifier(text: string): LingToken {
+    protected tokenizeIdentifier(text: string): LingToken {
         return this.addToken(ELingTokenType.IDENTIFIER, text);
     }
 
-    public tokenizeKeyword(keyword: string): LingToken {
+    protected tokenizeKeyword(keyword: string): LingToken {
         return this.addToken(ELingTokenType.getKeywordToken(keyword));
     }
 
-    public buildID(): string {
+    protected buildID(): string {
         let string = "";
 
         while(this.currentChar != null && this.isValidIdentifierChar(this.currentChar)) {
@@ -212,81 +247,64 @@ export default class LingLexicalAnalyzer {
         return string;
     }
 
-    public isValidIdentifierChar(char: string): boolean {
+    protected isValidIdentifierChar(char: string): boolean {
         return !this.isWhitespace(char) && !ELingTokenType.isOperator(char) //&& /[a-zA-Z0-9_.\-]/i.test(char);
     } 
 
-    public isValidWord(word: string): boolean {
+    protected isValidWord(word: string): boolean {
         if(this.isDigit(word[0])) {
-            this.throwError("Unexpected number");
+            this.throwError({ message: "Unexpected number" });
             return false;
         }
         if(word.startsWith(".")) {
-            this.throwError("Expected name of packet");
+            this.throwError({ message: "Expected name of packet", column: this.startColumn });
             return false;
         }
-        if(!/^[a-zA-Z0-9_.]*$/.test(word)) {
-            this.throwError(`Unexpected ${word}`);
+        if(!LingLexicalAnalyzer.VALID_WORD_REGEXP.test(word)) {
+            this.throwError({ message: `Unexpected ${word}`, keyword: word, column: this.startColumn });
             return false;
         }
         if(word.endsWith(".")) {
-            this.throwError(`Unexpected last point at "${word}"`);
+            this.throwError({ message: `Unexpected last point at "${word}"` });
             return false;
         }
         return true;
     }
 
-    public isLineComment(): boolean {
+    protected isLineComment(): boolean {
         return this.currentChar == "/" && this.peek() == "/";
     }
 
-    public isLongComment(): boolean {
+    protected isLongComment(): boolean {
         return this.currentChar == "/" && this.peek() == "*";
     }
 
-    public isWhitespace(char): char is ELingTokenType.WHITESPACES {
+    protected isWhitespace(char): char is ELingTokenType.WHITESPACES {
         return char == " " || char == "\n" || char == "\t" || char == "\r";
     } 
 
-    public skipWhitespace(): void {
+    protected skipWhitespace(): void {
         while(this.isWhitespace(this.currentChar)) {
             this.advance();
         }
     }
 
-    public peek(index = 1): string {
+    protected peek(index = 1): string {
         const pos = this.position + index;
         return pos < this.text.length ? this.text[pos] : null;
     }
 
-    public advance(index = 1): void {
-        if(this.currentChar == '\n') {
-            this.line++;
-            this.column = 0;
-        } else {
-            this.column += index;
+    protected advance(index = 1): void {
+        for(let i = 0; i < index; i++) {
+            if(this.currentChar == '\n') {
+                this.line++;
+                this.column = 1;
+            } else {
+                this.column++;
+            }
+            
+            this.position++;
+            this.currentChar = this.position < this.text.length ? this.text[this.position] : null;
         }
-
-        this.position += index;
-        this.currentChar = this.text[this.position] || null;
     }
 }
-
-const text = `
-
-package aboba {
-    hello(a=10) {
-        a
-    }
-    ${'c = "hello ${10 + 5}! ${"lol${hi hi}" + 10}"'}
-}
-
-package heh {
-
-}
-
-`
-
-// const la = new LingLexicalAnalyzer(text, "aboba.ling");
-// la.tokenize();
-// ELingTokenType.printTokens(la);

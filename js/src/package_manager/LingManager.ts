@@ -103,7 +103,7 @@ export namespace LingManager {
         const lingPackage = LingManager.getPackage(packageName);
 
         if(lingPackage == null) {
-            parser.throwError(`Cannot apply languages: " + langs + " for undefined package "${packageName}"`)
+            parser.throwError({ message: `Cannot apply languages: " + langs + " for undefined package "${packageName}"` })
         }
         for(const lang of langs) {
             lingPackage.translations[lang] ??= {};
@@ -114,7 +114,7 @@ export namespace LingManager {
         const lingPackage = LingManager.getPackage(packageName);
 
         if(lingPackage == null) {
-            parser.throwError(`Cannot clear languages: " + langs + " for undefined package "${packageName}"`)
+            parser.throwError({ message: `Cannot clear languages: "${langs}" for undefined package "${packageName}"` })
         }
         for(const lang of (langs != null ? langs : Object.keys(lingPackage.translations))) {
             delete lingPackage.translations[lang], lingPackage.functions?.[lang];

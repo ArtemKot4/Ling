@@ -23,13 +23,14 @@ export class LingPackageExpression extends LingExpression {
         this.mainExpression ??= this;
         parser.next();
         if(!parser.match(ELingTokenType.IDENTIFIER) && !parser.match(ELingTokenType.STRING)) {
-            parser.throwError(`Expected package name`);
+            parser.throwError({ message: `Expected package name` });
+            return;
         }
         this.name = parser.currentToken.keyword;
         parser.expect(ELingTokenType.OPEN_CBRACKET, `Expected "{", but got "${parser.peek(0).keyword}"`)
 
         if(parser.match(ELingTokenType.CLOSE_CBRACKET, 1)) {
-            parser.throwError(`Package "${this.name}" is empty`);
+            parser.throwError({ message: `Package "${this.name}" is empty` });
         }
         parser.next();
         this.langs ??= this.mainExpression.langs || LingManager.getLangsFor("common");
@@ -49,7 +50,7 @@ export class LingPackageExpression extends LingExpression {
     public parseBlockStatement(parser: LingParser): void {
         while(true) {
             if(parser.currentToken == null) {
-                parser.throwError(`Unclosed statement of package "${this.name}"`);
+                parser.throwError({ message: `Unclosed statement of package "${this.name}"` });
             }
             if(parser.match(ELingTokenType.CLOSE_CBRACKET)) {
                 parser.next();
@@ -70,7 +71,6 @@ export class LingPackageExpression extends LingExpression {
                 continue;
             }
             if(StatementHelper.isTranslation(parser)) {
-                console.log("найден перевод")
                 const translationExpression = new LingTranslationExpression();
                 translationExpression.langs = this.langs;
                 translationExpression.parse(parser, this.name);
