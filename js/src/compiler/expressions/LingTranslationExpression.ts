@@ -39,7 +39,7 @@ export class LingTranslationExpression extends LingExpression {
         while(parser.match(ELingTokenType.COMMA)) {
             parser.next(); // ,
             if(this.langs.length == this.expressions.length) {
-                parser.throwError({ message: `Unexpected language for enumeration ${this.expressions.length + 1}` });
+                parser.throwError({ message: `Unexpected language`, reason: `undefined index ${this.expressions.length + 1} of translation`, packageName: this.packageName });
             }
             this.expressions.push(this.buildExpression(parser));
         }
@@ -54,7 +54,7 @@ export class LingTranslationExpression extends LingExpression {
         for(let i = 0; i < this.langs.length; i++) {
             const translations = lingPackage.translations[this.langs[i]] ??= {};
             if(this.name in translations && this.override == null) {
-                parser.throwError({ message: `Unexpected repeating of translation "${this.name}" at package "${this.packageName}". You wanted to use override?` })
+                parser.throwError({ message: `Unexpected repeating of translation "${this.name}" at package "${this.packageName}". You wanted to use override?`, packageName: this.packageName })
             }
             translations[this.name] = String(new ExpressionExecutor(this.expressions[i], {}).calculate());
         }
@@ -69,7 +69,7 @@ export class LingTranslationExpression extends LingExpression {
             }
             languages = languages.slice(0, -2);
             if(this.nullable == null && languages.length > 0) {
-                parser.throwError({ message: `Expected translations for langs ${languages}` });
+                parser.throwError({ message: `Expected translations for langs ${languages}`, packageName: this.packageName });
             }
             parser.throwWarning(`Nullable values for langs ${languages} by translation "${this.name}" at package "${this.packageName}" not recommended`)
         }

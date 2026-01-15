@@ -32,22 +32,27 @@ export class LingDefineExpression extends LingExpression {
     }
 
     public parseLangs(parser: LingParser): void {
+        let column = parser.currentToken.column;
+        const line = parser.currentToken.line;
+
         do {
             if(parser.match(ELingTokenType.COMMA)) {
                 parser.next();
             }
             let lang = StatementHelper.Lang.buildLanguage(parser);
+            column += lang.length;
             if(lang == null) {
                 break;
             }
             if(this.langs.includes(lang)) {
-                parser.throwError({ message: `Unexpected repeating of lang "${lang}"` });
+                parser.throwError({ message: `Unexpected repeating of lang at one definition`, reason: `lang already defined`, line: line, column: column - 1, keyword: lang, packageName: this.packageName });
             }
             this.langs.push(lang);
         } while (parser.match(ELingTokenType.COMMA));
     }
 
     public parseWithKey(parser: LingParser): void {
+        const column = parser.currentToken.column;
         const id = parser.currentToken.keyword;
 
         if(parser.match(ELingTokenType.EQUAL, 1)) {
@@ -60,11 +65,12 @@ export class LingDefineExpression extends LingExpression {
                 //this.applyEncoding(parser, parser.expect(ELingTokenType.STRING, "Encoding expected string", 0).keyword);
                 return;
             } 
-            const validKeysEnumeration = LingDefineExpression.settingList.reduce((pV, cV, cI) => pV += cV + ", ", "").slice(0, -3);
-            parser.throwError({ message: `Unexpected key "${id}". Are you mean something of ${validKeysEnumeration}?` })
+            const validKeysEnumeration = LingDefineExpression.settingList.reduce((pV, cV, cI) => pV += `"${cV}"` + ", ", "").slice(0, -2);
+            parser.throwError({ message: `Unexpected key "${id}". Are you mean something of ${validKeysEnumeration}?`, reason: "now allowed", column, keyword: id, packageName: this.packageName })
         } else {
+            console.log(ELingTokenType.getPrintTypeName(parser.currentToken.type), parser.currentToken.keyword)
             if(id != "unexpected") {
-                parser.throwError({ message: `Expected unexpected function` })
+                parser.throwError({ message: `Expected "unexpected" function` });
             }
             if(!StatementHelper.isFunction(parser)) {
                 parser.throwError({ message: `Expected function` });

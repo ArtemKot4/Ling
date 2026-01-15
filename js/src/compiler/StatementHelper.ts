@@ -37,7 +37,7 @@ export namespace StatementHelper {
         let token = parser.peek(index);
 
         while(token != null && isValue(token.type) == false) {
-            index++
+            index++;
             token = parser.peek(index);   
         }
         return index;

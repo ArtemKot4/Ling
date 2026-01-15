@@ -18,11 +18,7 @@ export class LingError {
         packageName?: string,
         fileName?: string
     }): void {
-        const lastToken = this.lexicalAnalyzer.tokens[this.lexicalAnalyzer.tokens.length - 1];
-        description.column ??= lastToken.column + (lastToken.keyword?.length || 0);
-        description.line ??= lastToken.line + 1;
-        description.keyword ??= lastToken.keyword
-
+        description.packageName ??= "common";
         console.log([
             this.name + ": " + description.message,
             "",
@@ -38,8 +34,10 @@ export class LingError {
                         )
                     )
                     .fill("^").join("")} ${description.reason || "reason"}`,
-                    `${description.packageName != null ? `at package: "${description.packageName}` : ""}${description.fileName != null ? "\nat file: " + `"${description.fileName}"` : ""}`
-        ].join("\n"))
+                    "",
+                    `${description.packageName != null ? `at package: "${description.packageName }"` : ""}${description.fileName != null ? "\nat file: " + `"${description.fileName}"` : ""}`,
+            ]
+        .join("\n"))
         throw ''
     }
 
@@ -57,11 +55,14 @@ export class LingError {
     }
 
     protected getStackWith(token: Partial<LingToken>): string {
-        const lineMin = token.line < 5 ? token.line : 5;
+        const lineMin = token.line < 7 ? token.line : 7;
         let spaceCount = "";
         const lines = this.lexicalAnalyzer.text.split("\n").filter((lineText, index) => {
             return index >= token.line - lineMin && index <= token.line;
-        })
+        });
+        const findIndex = lines.findIndex((lineText) => lineText.trim().length != 0);
+        lines.splice(0, findIndex);
+
         lines.forEach((lineText, index) => {
             const line = String(token.line + index);
             if(spaceCount.length < line.length) {
@@ -69,7 +70,7 @@ export class LingError {
             }
         });
         return lines.map((lineText, index) => { 
-            const lineIndexPrefix = this.acceptLineText(String((token.line - lineMin) + index + 1), spaceCount);
+            const lineIndexPrefix = this.acceptLineText(String((token.line - lineMin) + (index + findIndex) + 1), spaceCount);
             return `${lineIndexPrefix}` + lineText
         })
         .join("\n");

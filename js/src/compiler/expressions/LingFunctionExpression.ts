@@ -50,7 +50,6 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
 
     public override parse(parser: LingParser, packageName: string): void {
         StatementHelper.applyModifiers(parser, this);
-
         if(parser.currentToken.keyword.includes(".")) {
             [this.packageName, this.name] = StatementHelper.getPackageAndKeyName(parser.currentToken.keyword);
         } else {
@@ -64,7 +63,7 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
             parser.next(1); //:
             const lang = StatementHelper.Lang.buildLanguage(parser);
             if(lang == null) {
-                parser.throwError({ message: `Expected language for function overload of "${this.name}"`});
+                parser.throwError({ message: `Expected language for function overload of "${this.name}"`, packageName: this.packageName});
             }
             this.lang = lang;
         }
@@ -73,7 +72,7 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
             parser.throwError({ message: `Expected "{"` });
         }
         if(parser.match(ELingTokenType.CLOSE_CBRACKET, 1)) {
-            parser.throwError({ message: `Function "${this.name}" must return expression` });
+            parser.throwError({ message: `Function "${this.name}" must return expression`, packageName: this.packageName });
         }
         this.parseBody(parser);       
         parser.next();
@@ -131,7 +130,7 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
             !StatementHelper.isBoolOperator(parser.currentToken.type) && 
             !StatementHelper.isMathOperator(parser.currentToken.type)
         ) {
-            parser.throwError({ message: "Expected value for expression inside match block" });
+            parser.throwError({ message: "Expected value for expression inside match block", packageName: this.packageName });
         }
         let tokens = [parser.currentToken];
 
@@ -162,7 +161,7 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
             if(parser.currentToken.type == ELingTokenType.IDENTIFIER) {
                 const argName = parser.currentToken.keyword;
                 if(argName in this.args) {
-                    parser.throwError({ message: `Cannot use repeating name "${argName}" for new argument in one function`});
+                    parser.throwError({ message: `Cannot use repeating name for new argument in one function`, reason: `argument by name "${argName}" already defined`, packageName: this.packageName });
                 }
                 let value = null;
                 parser.next(1);
@@ -178,7 +177,7 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
             else if(parser.currentToken.type == ELingTokenType.CLOSE_RBRACKET) {
                 break;
             } else {
-                parser.throwError({message: `Unexpected "${parser.currentToken.keyword}"`})
+                parser.throwError({message: `Unexpected "${ parser.currentToken.keyword }"`})
             }
         }
         if(!parser.match(ELingTokenType.CLOSE_RBRACKET)) {
@@ -202,10 +201,10 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
             }
         }
         if(this.lang != null && LingManager.hasLang(this.packageName, this.lang) == false) {
-            parser.throwError({ message: `Cannot register function for not defined lang "${this.lang}"`, ...parser.get(this.nameTokenIndex + 2), keyword: this.lang })
+            parser.throwError({ message: `Cannot register function for not defined lang`, reason: `lang "${this.lang}" not defined`, ...parser.get(this.nameTokenIndex + 2), keyword: this.lang, packageName: this.packageName })
         }
         if(LingManager.hasFunction(this.packageName, this.name, this.lang) == true && this.override == null) {
-            parser.throwError({ message: `Unexpected repeating of function "${this.name}" with lang "${this.lang}". You wanted to use override?`, ...token });
+            parser.throwError({ message: `Unexpected repeating of function. You wanted to use override?`, reason: `some function for lang "${this.lang}" already defined`, ...token, packageName: this.packageName });
         }
     }
 

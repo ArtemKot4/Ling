@@ -10,7 +10,7 @@ export namespace LingManager {
         this.currentLang = lang;
     }
 
-    export function findNearestPackBy(packageName: string, predicate: (lingPackage: ILingPackage,name: string) => boolean): ILingPackage | null {
+    export function findNearestPackageBy(packageName: string, predicate: (lingPackage: ILingPackage,name: string) => boolean): ILingPackage | null {
         const packagePath = packageName.split(".");
         while(packagePath.length > 0) {
             const buildedPackageName = packagePath.join(".");
@@ -70,7 +70,7 @@ export namespace LingManager {
         const translation = lingPackage?.translations[lang][key];
 
         if(lingPackage == null || translation == null) {
-            const functions = findNearestPackBy(packageName, (lingPackage) => "unexpected" in lingPackage.functions)?.functions;
+            const functions = findNearestPackageBy(packageName, (lingPackage) => "unexpected" in lingPackage.functions)?.functions;
             const unexpected = functions.unexpected[lang] || functions.unexpected.default;
             return unexpected != null ? new LingFunctionExpression(unexpected as ILingFunctionNode).call([key]) as string : "Unknown key: " + key;
         }
