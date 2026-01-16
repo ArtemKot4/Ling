@@ -46,7 +46,7 @@ export namespace StatementHelper {
     export function isFunction(parser: LingParser): boolean {
         const index = getSkippedModifierIndex(parser);
 
-        return parser.match(ELingTokenType.IDENTIFIER, index) && (
+        return StatementHelper.isName(parser.peek(index).type) && (
             parser.match(ELingTokenType.OPEN_RBRACKET, index + 1) || 
             parser.match(ELingTokenType.COLON, index + 1)
         );
@@ -69,6 +69,10 @@ export namespace StatementHelper {
             tokenType == ELingTokenType.STRING ||
             tokenType == ELingTokenType.NUMBER
         );
+    }
+
+    export function isName(tokenType: ELingTokenType): boolean {
+        return tokenType == ELingTokenType.IDENTIFIER || tokenType == ELingTokenType.STRING;
     }
 
     const mathOperators: Set<ELingTokenType> = new Set([
@@ -108,13 +112,14 @@ export namespace StatementHelper {
         return boolOperators.has(tokenType);
     }
 
-    export function getPackageAndKeyName(name: string): [packageName: string, keyName: string] {
-        const splited = name.split(".");
-        let packageName, keyName;
-
-        if(splited.length > 1) {
-            keyName = splited.pop(), packageName = splited.join(".");
+    export function getPackageAndKeyName(name: string, packageFallback): [packageName: string, keyName: string] {
+        if(!name.includes(".")) {
+            return [packageFallback ?? "common", name];
         }
+        const splited = name.split(".");
+        const keyName = splited.pop();
+        const packageName = (packageFallback ? packageFallback + "." : "") + splited.join(".");
+
         return [packageName, keyName || name];
     }
 

@@ -26,7 +26,7 @@ export class LingPackageExpression extends LingExpression {
             parser.throwError({ message: `Expected package name` });
             return;
         }
-        this.name = parser.currentToken.keyword;
+        this.name ??= parser.currentToken.keyword;
         parser.expect(ELingTokenType.OPEN_CBRACKET, `Expected "{", but got "${parser.peek(0).keyword}"`)
 
         if(parser.match(ELingTokenType.CLOSE_CBRACKET, 1)) {

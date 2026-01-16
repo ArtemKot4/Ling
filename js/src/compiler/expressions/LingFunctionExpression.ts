@@ -50,11 +50,7 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
 
     public override parse(parser: LingParser, packageName: string): void {
         StatementHelper.applyModifiers(parser, this);
-        if(parser.currentToken.keyword.includes(".")) {
-            [this.packageName, this.name] = StatementHelper.getPackageAndKeyName(parser.currentToken.keyword);
-        } else {
-            this.packageName = packageName || "common", this.name = parser.currentToken.keyword;
-        }
+        [this.packageName, this.name] = StatementHelper.getPackageAndKeyName(parser.currentToken.keyword, packageName);
         this.nameTokenIndex = parser.tokenIndex;
         parser.next(); //name
         //console.log(`name: ${this.packageName}${this.name}, override: ${this.override}, runtime: ${this.runtime}`)
@@ -161,7 +157,7 @@ export class LingFunctionExpression extends LingExpression implements ILingFunct
             if(parser.currentToken.type == ELingTokenType.IDENTIFIER) {
                 const argName = parser.currentToken.keyword;
                 if(argName in this.args) {
-                    parser.throwError({ message: `Cannot use repeating name for new argument in one function`, reason: `argument by name "${argName}" already defined`, packageName: this.packageName });
+                    parser.throwError({ message: `Cannot use repeating name for new argument in one function`, reason: `argument already defined`, packageName: this.packageName });
                 }
                 let value = null;
                 parser.next(1);
