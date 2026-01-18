@@ -15,7 +15,6 @@ export class LingTranslationExpression extends LingExpression {
     public langs: string[];
     public packageName: string;
     public expressions: ExpressionValue[];
-
     public errorToken: LingToken;
 
     public override parse(parser: LingParser, packageName: string): void {

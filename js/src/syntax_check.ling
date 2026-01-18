@@ -7,9 +7,12 @@ define langs = en-US, ru-RU
 }*/
 
 package app {
-    name = "MyApp", "a"
+    name = `MyApp
+    hehe ${10}
+    interesting
+    `, "a"
     version = "2.0.0", "b"
-    author = "DevTeam", "Команда разработки", "Example of error"
+    author = "DevTeam", "Команда разработки"
     year = "2024", "c"
     build = "Release 42", "d"
     
@@ -34,5 +37,4 @@ package aboba.lol {
     package test2 {
         name = "lol", "ok"//, "?"
     }
-    tr = "10" + 5 + 2 + 2 + "helloooo"
 }

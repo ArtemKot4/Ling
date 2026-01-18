@@ -8,23 +8,43 @@
 
 ## Строки ☑:
 
-Строки позволяют переводам хранить слова. Создаются только при помощи двойных кавычек. Могут быть в одну строку или в несколько.
+Строки позволяют переводам и выражениям хранить слова.
 
-Синтаксис такой: `"любой текст"`
+#### Обычные строки
+
+Обычные строки объявляются при помощи одинарных `'` и двойных `"` кавычек.
 
 ```ling
-//в одну строку
-"I love glowworms. They so beautiful, and, seems, they not afraid of dark. I love them, and, seems, they love me." 
-
-//в несколько строк, все отступы учитываются
-"
-  Infinite Forest 
-  est silva in lux,
-  non locus in malum.
-"
+example_translation_one = 'one'
+example_translation_two = "two"
 ```
 
-#### Поддержка выражений:
+Они ничем друг от друга не отличаются.
+Такие строки не будут при переносе строк содержать в себе символы переносов строк: `\n`, `\r`
+
+```ling
+example_some_lines = "I love orange.
+Orange is one of my favorite colors in paintings
+"
+```
+В итоге такая строка вернёт текст вида: `I love orange.Orange is one of my favorite colors in paintings`
+
+#### Строки с сохранением переносов строк
+
+Такие строки объявляются при помощи угловых кавычек и обычно используются только для сохранения символов переносов.
+
+```ling
+package mod.infinite_forest {
+    info = `Infinite Forest 
+    est silva in lux,
+    non locus in malum.`
+    //отступы обрабатываются, пробелы в начале будут добавлены только, если их будет больше чем у info
+}
+```
+
+В итоге такая строка вернёт текст вида: `Infinite Forest\nest silva in lux,\nnon locus in malum.`
+
+### Поддержка выражений:
 
 Строки поддерживают выражения внутри себя, точно так же, как и в JavaScript. 
 

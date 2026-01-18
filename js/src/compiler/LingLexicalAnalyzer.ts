@@ -5,6 +5,9 @@ import { LingToken } from "./LingToken";
 export default class LingLexicalAnalyzer {
     public static VALID_WORD_REGEXP: RegExp = /^[a-zA-Z0-9_.]*$/;
     public static FLAGS_REGEXP: RegExp = /i|g|m|s|u|y|d/;
+    public static STRING_CHAR_REGEXP = /`|'|"/;
+    public static STRING_TRANSFER_CHAR_REGEXP = /\r|\n/
+
     public line: number = 0;
     public position: number = 0;
     public column: number = 0;
@@ -90,8 +93,26 @@ export default class LingLexicalAnalyzer {
         return this.addToken(ELingTokenType.REGEXP, regexp);
     }
 
+    public getWhitespaceFrom(line: number): number {
+        let lastColumn;
+        let lastLine;
+
+        for(let i = this.tokens.length - 1; i > 0; i--) {
+            const token = this.tokens[i];
+            if(token.line < line) {
+                return lastColumn - 1;
+            }
+            lastColumn = token.column;
+            lastLine = token.line;
+        }
+        return 0;
+    }
+
     protected tokenizeString(): LingToken {
-        this.advance();
+        const endSymbol = this.peek(0);
+        const skipN = endSymbol != "\`";
+
+        this.advance(); // endSymbol
         let string = "";
         
         while(true) {
@@ -119,7 +140,7 @@ export default class LingLexicalAnalyzer {
                         const closeToken = this.addToken(ELingTokenType.CLOSE_RBRACKET);
                         this.advance(); // }
                         string = "";
-                        if(this.currentChar != `"` as any) {
+                        if(this.currentChar != endSymbol as any) {
                             this.addToken(ELingTokenType.PLUS);
                             break;
                         }
@@ -133,14 +154,33 @@ export default class LingLexicalAnalyzer {
                     } 
                 }
             }
-            if(this.currentChar == `"`) {
+            if(this.currentChar == endSymbol) {
                 this.advance();
                 break;
+            }
+            if(this.currentChar.match(LingLexicalAnalyzer.STRING_TRANSFER_CHAR_REGEXP) as any) {
+                const whitespace = this.getWhitespaceFrom(this.line);
+                console.log(whitespace)
+                if(skipN == false) {
+                    string += this.currentChar;
+                }                
+                this.advance();
+                this.skipWhitespaceCount(whitespace);
+                continue;
             }
             string += this.currentChar;
             this.advance();
         }
         return this.addToken(ELingTokenType.STRING, string);
+    }
+
+    protected skipWhitespaceCount(count: number): void {
+        for(let i = 0; i < count; i++) {
+            if(this.currentChar == null || this.currentChar != " ") {
+                break;
+            }
+            this.advance();
+        }          
     }
 
     protected tokenizeNumber(): LingToken {
@@ -193,7 +233,6 @@ export default class LingLexicalAnalyzer {
         if(!this.currentChar) {
             return null;
         }
-
         this.startColumn = this.column; 
         this.startLine = this.line;
 
@@ -212,7 +251,7 @@ export default class LingLexicalAnalyzer {
         if(this.isValidNumber()) {
             return this.tokenizeNumber();
         }
-        if(this.currentChar == `"`) {
+        if(this.currentChar.match(LingLexicalAnalyzer.STRING_CHAR_REGEXP)) {
             return this.tokenizeString();
         }
         if(ELingTokenType.isOperator(this.currentChar)) {

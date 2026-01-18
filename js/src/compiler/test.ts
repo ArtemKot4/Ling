@@ -11,7 +11,7 @@ import { LingManager } from "../package_manager/LingManager";
 const text = require("fs").readFileSync("js/src/syntax_check.ling").toString()
 const l = new LingLexicalAnalyzer(text, "syntax_check.ling");
 l.tokenize();
-//ELingTokenType.printTokens(l, 0, 15);
+// ELingTokenType.printTokens(l, 0, 15);
 const p = new LingParser(l);
 p.parse();
 console.log(JSON.stringify(LingManager.packages));

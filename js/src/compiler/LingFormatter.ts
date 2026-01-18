@@ -2,7 +2,7 @@ import { ELingTokenType } from "./ELingTokenType"
 import { LingToken } from "./LingToken";
 
 export namespace LingFormatter {
-    export function getStackTraceFrom(description: {
+    export interface ICodeMessage {
         message: string,
         reason?: string, 
         line?: number,
@@ -11,9 +11,11 @@ export namespace LingFormatter {
         type?: ELingTokenType,
         packageName?: string,
         fileName?: string
-    }, prefixName: string, text: string): string {
-        const codeField = new CodeField();
-        const codeText = codeField.buildFrom(description, text);
+    }
+
+    export function getStackTraceFrom(description: ICodeMessage, prefixName: string, text: string): string {
+        const codeField = new CodeField(text);
+        const codeText = codeField.buildFrom(description);
         return [
             prefixName + ": " + description.message,
             "",
@@ -35,7 +37,7 @@ export namespace LingFormatter {
     }
 
     export class CodeField {
-        public constructor(public linesCount: number = 7) {}
+        public constructor(public codeText: string, public linesCount: number = 7) {}
         public prefixLength: number = 0;
 
         public acceptLineText(line: string, spaceCount: string): string {
@@ -51,23 +53,23 @@ export namespace LingFormatter {
             return text;
         }
 
-        public buildFrom(token: Partial<LingToken>, text: string): string {
-            const lineMin = token.line < this.linesCount ? token.line : this.linesCount;
+        public buildFrom(description: ICodeMessage): string {
+            const lineMin = description.line < this.linesCount ? description.line : this.linesCount;
             let spaceCount = "";
-            const lines = text.split("\n").filter((lineText, index) => {
-                return index >= token.line - lineMin && index <= token.line;
+            const lines = this.codeText.split("\n").filter((lineText, index) => {
+                return index >= description.line - lineMin && index <= description.line;
             });
             const findIndex = lines.findIndex((lineText) => lineText.trim().length != 0);
             lines.splice(0, findIndex);
     
             lines.forEach((lineText, index) => {
-                const line = String(token.line + index);
+                const line = String(description.line + index);
                 if(spaceCount.length < line.length) {
                     spaceCount = line;
                 }
             });
             return lines.map((lineText, index) => { 
-                return `${this.acceptLineText(String((token.line - lineMin) + (index + findIndex) + 1), spaceCount)}` + lineText
+                return `${this.acceptLineText(String((description.line - lineMin) + (index + findIndex) + 1), spaceCount)}` + lineText
             })
             .join("\n");
         }

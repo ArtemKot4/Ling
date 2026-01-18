@@ -80,7 +80,9 @@ export namespace StatementHelper {
         ELingTokenType.MINUS,
         ELingTokenType.ASTERISK,
         ELingTokenType.SLASH,
-        ELingTokenType.PERCENT
+        ELingTokenType.PERCENT,
+        ELingTokenType.OPEN_RBRACKET,
+        ELingTokenType.CLOSE_RBRACKET
     ]);
 
     const boolOperators: Set<ELingTokenType> = new Set([
