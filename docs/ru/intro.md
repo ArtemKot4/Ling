@@ -11,7 +11,7 @@
 1. [Определения](definitions.md)
 2. [Пакеты](packages.md)
 3. [Комментарии](comments.md)
-4. [Значения](values.md)
+4. [Типы данных](type-data.md)
 5. [Операторы](operators.md)
 6. [Переводы](translations.md)
 7. [Функции](functions.md)
