@@ -48,15 +48,7 @@ package example {
 }
 ```
 
-Или просто сделайте универсальный пакет, но тогда все переводы с одним значением будут по-умолчанию считаться обычным значением из перечисления:
 
-```ling
-define langs = en-US, ru-RU
-package enum example {
-    text = "This is example" //это значение
-    translation = "Text: ${text}", "Текст: ${text}" //это перевод
-}
-```
 
 ## Методы перечислений
 
@@ -71,8 +63,8 @@ enum ERandomNumber {
     one = 1
     two = 2
     three = 3
-    rand_value = ERandomNumber.random("value") //будет работать только со значениями
-    rand_function = ERandomNumber.random("function") //будет работать только с функциями. Если их не будет, вернёт null и выдаст предупреждение
+    rand_value = ERandomNumber.randomValue() //будет работать только со значениями
+    rand_function = ERandomNumber.randomFunction() //будет работать только с функциями. Если их не будет, вернёт null и выдаст предупреждение
 }
 ```
 
@@ -88,5 +80,3 @@ enum ERandomNumber {
     ordinal_two = ERandomNumber.ordinal(two) //1
 }
 ```
-
-

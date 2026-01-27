@@ -1,10 +1,16 @@
 // ===== LING FILE: ~2000 LINES =====
 // Все конструкции: пакеты, переводы, простые функции
 
-define langs = en-US, ru-RU
-/*define unexpected() {
-    "lol"
-}*/
+define {
+    langs = en-US, ru-RU
+    unexpected() {
+        "aboba"
+    }
+}
+
+define unexpected:ru-RU() {
+    "test"
+}
 
 package app {
     name = `MyApp

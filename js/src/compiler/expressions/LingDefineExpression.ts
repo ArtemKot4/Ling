@@ -15,6 +15,10 @@ export class LingDefineExpression extends LingExpression {
     public langs: string[] = [];
     public unexpectedFunctions: LingFunctionExpression[] = [];
 
+    public static get settingListString(): string {
+        return LingDefineExpression.settingList.reduce((pV, cV, cI) => pV += `"${cV}"` + ", ", "").slice(0, -2);
+    }
+
     public override parse(parser: LingParser, packageName: string = "common"): void {
         parser.next();
         this.packageName = packageName;
@@ -65,17 +69,12 @@ export class LingDefineExpression extends LingExpression {
                 //this.applyEncoding(parser, parser.expect(ELingTokenType.STRING, "Encoding expected string", 0).keyword);
                 return;
             } 
-            const validKeysEnumeration = LingDefineExpression.settingList.reduce((pV, cV, cI) => pV += `"${cV}"` + ", ", "").slice(0, -2);
-            parser.throwError({ message: `Unexpected key "${id}". Are you mean something of ${validKeysEnumeration}?`, reason: "now allowed", column, keyword: id, packageName: this.packageName })
+            parser.throwError({ message: `Unexpected key "${id}". Are you mean something of ${LingDefineExpression.settingListString}?`, reason: "now allowed", column, keyword: id, packageName: this.packageName })
         } else {
-            console.log(ELingTokenType.getPrintTypeName(parser.currentToken.type), parser.currentToken.keyword)
-            if(id != "unexpected") {
-                parser.throwError({ message: `Expected "unexpected" function` });
+            if(StatementHelper.isFunction(parser)) {
+                return this.parseUnexpected(parser);
             }
-            if(!StatementHelper.isFunction(parser)) {
-                parser.throwError({ message: `Expected function` });
-            }
-            this.parseUnexpected(parser);
+            parser.throwError({ message: `Invalid format for key "${id}" inside definition` });            
         }
     }
 
@@ -85,9 +84,9 @@ export class LingDefineExpression extends LingExpression {
             parser.throwError({ message: `Unexpected "${parser.currentToken}"` });
         }
 
-        while(true) {
+        while(!parser.match(ELingTokenType.CLOSE_CBRACKET)) {
             if(!LingDefineExpression.settingList.includes(parser.currentToken.keyword)) {
-                break;
+                parser.throwError({ message: `Unexpected key "${parser.currentToken.keyword}". Are you mean something of ${LingDefineExpression.settingListString}?`, reason: "now allowed", column: parser.currentToken.column, keyword: parser.currentToken.keyword, packageName: this.packageName });
             }
             if(parser.currentToken.keyword == "langs") {
                 parser.next(2);
@@ -96,28 +95,25 @@ export class LingDefineExpression extends LingExpression {
             if(parser.currentToken.keyword == "encoding") {
                 parser.next(2);
                 if(!parser.match(ELingTokenType.STRING)) {
-                    parser.throwError({ message: "Excepted string literal for encoding definition" });
+                    parser.throwError({ message: "Expected string literal for encoding definition" });
                 }
                 //this.applyEncoding(parser, parser.currentToken.keyword);
                 parser.next();
             }
             if(StatementHelper.isFunction(parser)) {
-                if(parser.currentToken.keyword != "unexpected") {
-                    parser.throwError({ message: `Unexpected method expected, but got "${parser.currentToken.keyword}"` });
-                } else {
-                    this.parseUnexpected(parser);
-                }
+                this.parseUnexpected(parser);
             }
         }
-        
-        if(!parser.match(ELingTokenType.CLOSE_CBRACKET)) {
-            parser.throwError({ message: `Expected closing bracket, but got "${parser.currentToken.keyword}"` });
-        }
+        parser.expect(ELingTokenType.CLOSE_CBRACKET, `Expected closing bracket, but got "${parser.currentToken.keyword}"`, 0);
     }
 
     public parseUnexpected(parser: LingParser): void {
         const unexpected = new LingFunctionExpression();
         unexpected.parse(parser, this.packageName);
+        if(unexpected.name != "unexpected") {
+            const token = parser.get(unexpected.nameTokenIndex)
+            parser.throwError({ message: `Expected another function name`, reason: `Rename function to it will be "unexpected"`, column: token.column, keyword: token.keyword });
+        }
         this.unexpectedFunctions.push(unexpected);
     }
 

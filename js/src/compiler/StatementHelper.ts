@@ -115,6 +115,7 @@ export namespace StatementHelper {
     }
 
     export function getPackageAndKeyName(name: string, packageFallback): [packageName: string, keyName: string] {
+        console.log(name)
         if(!name.includes(".")) {
             return [packageFallback ?? "common", name];
         }
